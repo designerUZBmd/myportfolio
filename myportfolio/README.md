@@ -41,3 +41,7 @@ my passwords
 mongoDB:
 muhammad1obloqulov_db_user
 FRVjfEDEBAuTEUHa
+
+
+supabase
+g_TYLs7@L+X_QSP

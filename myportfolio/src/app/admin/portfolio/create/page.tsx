@@ -2,126 +2,75 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import AdminGuard from "@/components/admin/AdminGuard";
 
 type Category = {
-  _id: string;
+  id: string;
   title: string;
-  slug: string;
 };
 
 export default function CreatePortfolioPage() {
   const router = useRouter();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
-
-  const [form, setForm] = useState({
-    title: "",
-    slug: "",
-    categorySlug: "",
-    coverImageUrl: "",
-    excerpt: "",
-    description: "",
-    year: new Date().getFullYear(),
-  });
-
-  // Category’larni olish
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data));
-  }, []);
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-  if (!e.target.files?.[0]) return;
-
-  const formData = new FormData();
-  formData.append("file", e.target.files[0]);
-
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  const data = await res.json();
-
-  setForm((prev) => ({
-    ...prev,
-    coverImageUrl: data.url,
-  }));
-}
-
-const [isFeatured, setIsFeatured] = useState(false);
-
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-
-    const res = await fetch("/api/portfolio", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: form.title,
-        slug: form.slug,
-        categorySlug: form.categorySlug,
-        coverMedia: {
-          type: "image",
-          url: form.coverImageUrl,
-        },
-        gallery,
-        excerpt: form.excerpt,
-        description: form.description,
-        year: Number(form.year),
-        sections,
-        isFeatured,
-      }),
-    });
-
-    setLoading(false);
-
-    if (res.ok) {
-      alert("Case created ✅");
-      router.push("/admin/portfolio");
-    } else {
-      alert("Error creating case ❌");
-    }
-  }
+  // form states
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [description, setDescription] = useState("");
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [isFeatured, setIsFeatured] = useState(false);
 
   const [sections, setSections] = useState<
     { title: string; content: string }[]
   >([]);
 
-  function addSection() {
-    setSections([...sections, { title: "", content: "" }]);
-  }
-
-  function updateSection(index: number, field: string, value: string) {
-    const updated = [...sections];
-    updated[index] = { ...updated[index], [field]: value };
-    setSections(updated);
-  }
-
-  function removeSection(index: number) {
-    setSections(sections.filter((_, i) => i !== index));
-  }
-
   const [gallery, setGallery] = useState<
     { type: "image" | "video"; url: string }[]
   >([]);
 
+  // ✅ categories from Supabase
+  useEffect(() => {
+    async function loadCategories() {
+      const { data } = await supabase
+        .from("categories")
+        .select("id, title")
+        .eq("is_active", true)
+        .order("order");
+
+      setCategories(data || []);
+    }
+
+    loadCategories();
+  }, []);
+
+  // ✅ Cloudinary upload qoladi
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files?.[0]) return;
+
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    setCoverUrl(data.url);
+  }
+
   async function handleGalleryUpload(
-       e: React.ChangeEvent<HTMLInputElement>
-    ) {
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     if (!e.target.files?.length) return;
 
-  const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files);
 
     for (const file of files) {
       const formData = new FormData();
@@ -136,156 +85,154 @@ const [isFeatured, setIsFeatured] = useState(false);
 
       setGallery((prev) => [
         ...prev,
-        {
-          type: data.type === "video" ? "video" : "image",
-          url: data.url,
-        },
+        { type: data.type === "video" ? "video" : "image", url: data.url },
       ]);
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
 
+    if (!categoryId) {
+      alert("Category required");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("portfolio_cases")
+      .insert({
+        title,
+        slug,
+        category_id: categoryId,
+        cover_type: "image",
+        cover_url: coverUrl,
+        excerpt,
+        description,
+        year,
+        gallery,
+        sections,
+        is_featured: isFeatured,
+        is_published: true,
+      });
+
+    setLoading(false);
+
+    if (error) {
+      console.error(error);
+      alert("Error creating case");
+    } else {
+      alert("Case created ✅");
+      router.push("/portfolio");
+    }
+  }
 
   return (
+    <AdminGuard>
     <div style={{ maxWidth: 600 }}>
       <h1>Add New Case</h1>
 
       <form onSubmit={handleSubmit}>
-        <input
-          name="title"
-          placeholder="Title"
-          value={form.title}
-          onChange={handleChange}
-          required
-        />
+        <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input placeholder="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
 
-        <input
-          name="slug"
-          placeholder="Slug (saas-landing-page)"
-          value={form.slug}
-          onChange={handleChange}
-          required
-        />
-
-        <select
-          name="categorySlug"
-          value={form.categorySlug}
-          onChange={handleChange}
-          required
-        >
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
           <option value="">Select category</option>
           {categories.map((cat) => (
-            <option key={cat._id} value={cat.slug}>
-              {cat.title}
-            </option>
+            <option key={cat.id} value={cat.id}>{cat.title}</option>
           ))}
         </select>
 
-        <input
-          name="coverImageUrl"
-          placeholder="Cover image URL"
-          value={form.coverImageUrl}
-          onChange={handleChange}
-          required
-        />
-
-        <textarea
-          name="excerpt"
-          placeholder="Short excerpt"
-          value={form.excerpt}
-          onChange={handleChange}
-          required
-        />
-
-        <textarea
-          name="description"
-          placeholder="Full description"
-          value={form.description}
-          onChange={handleChange}
-        />
-
+        <input placeholder="Cover URL" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} />
         <input type="file" onChange={handleFileUpload} />
 
-        <input
-          name="year"
-          type="number"
-          value={form.year}
-          onChange={handleChange}
-        />
+        <textarea placeholder="Excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
+        <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
 
         <h3>Case Sections</h3>
 
-      {sections.map((section, i) => (
-        <div key={i}>
-          <input
-            placeholder="Section title (e.g. Problem)"
-            value={section.title}
-            onChange={(e) =>
-              updateSection(i, "title", e.target.value)
-            }
-          />
+        {sections.map((section, i) => (
+          <div key={i} style={{ border: "1px solid #ccc", padding: 10 }}>
+            <input
+              placeholder="Section title (e.g. Problem)"
+              value={section.title}
+              onChange={(e) => {
+                const copy = [...sections];
+                copy[i].title = e.target.value;
+                setSections(copy);
+              }}
+            />
 
-          <textarea
-            placeholder="Section content"
-            value={section.content}
-            onChange={(e) =>
-              updateSection(i, "content", e.target.value)
-            }
-          />
+            <textarea
+              placeholder="Section content"
+              value={section.content}
+              onChange={(e) => {
+                const copy = [...sections];
+                copy[i].content = e.target.value;
+                setSections(copy);
+              }}
+            />
 
-          <button type="button" onClick={() => removeSection(i)}>
-            Remove
-          </button>
-        </div>
-      ))}
-
-      <button type="button" onClick={addSection}>
-        + Add Section
-      </button>
-
-      <h3>Gallery</h3>
-      <input
-        type="file"
-        multiple
-        accept="image/*,video/*"
-        onChange={handleGalleryUpload}
-      />
-
-      <div style={{ display: "grid", gap: 10 }}>
-        {gallery.map((item, i) => (
-          <div key={i}>
-            {item.type === "image" ? (
-              <img src={item.url} width={120} />
-            ) : (
-              <video src={item.url} width={120} controls />
-            )}
-
-            <button
-              type="button"
-              onClick={() =>
-                setGallery(gallery.filter((_, idx) => idx !== i))
-              }
-            >
-              Remove
+            <button type="button" onClick={() =>
+              setSections(sections.filter((_, idx) => idx !== i))
+            }>
+              Remove section
             </button>
           </div>
         ))}
-      </div>
 
-      <label>
+        <button
+          type="button"
+          onClick={() => setSections([...sections, { title: "", content: "" }])}
+        >
+          + Add section
+        </button>
+
+        <h3>Gallery</h3>
+
         <input
-          type="checkbox"
-          checked={isFeatured}
-          onChange={(e) => setIsFeatured(e.target.checked)}
+          type="file"
+          multiple
+          accept="image/*,video/*"
+          onChange={handleGalleryUpload}
         />
-        Featured case
-      </label>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {gallery.map((item, i) => (
+            <div key={i}>
+              {item.type === "image" ? (
+                <img src={item.url} width={120} />
+              ) : (
+                <video src={item.url} width={120} controls />
+              )}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setGallery(gallery.filter((_, idx) => idx !== i))
+                }
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
 
 
-      <button type="submit" disabled={loading}>
+
+        <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+
+        <label>
+          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+          Featured
+        </label>
+
+        <button type="submit" disabled={loading}>
           {loading ? "Saving..." : "Create Case"}
-      </button>
+        </button>
       </form>
     </div>
+    </AdminGuard>
   );
 }
