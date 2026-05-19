@@ -46,7 +46,7 @@ async function getPortfolio(category?: string) {
 }
 
 export default async function PortfolioPage({ searchParams }: Props) {
-  const category = searchParams.category;
+  const { category } = await searchParams;
 
   const categories = await getCategories();
   const items = await getPortfolio(category);

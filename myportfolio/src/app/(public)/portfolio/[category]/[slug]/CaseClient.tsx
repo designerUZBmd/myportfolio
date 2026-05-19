@@ -2,7 +2,28 @@
 import { useRevealer } from "@/hooks/useRevealer";
 import Image from "next/image";
 
-export default function CaseClient({ item }: { item: any }) {
+type GalleryMedia = {
+  type: "image" | "video";
+  url: string;
+};
+
+type CaseSection = {
+  title: string;
+  content: string;
+};
+
+type CaseItem = {
+  id: string;
+  title: string;
+  year: number;
+  cover_url: string;
+  cover_type: "image" | "video";
+  excerpt: string;
+  gallery?: GalleryMedia[];
+  sections?: CaseSection[];
+};
+
+export default function CaseClient({ item }: { item: CaseItem }) {
   useRevealer();
 
   return (

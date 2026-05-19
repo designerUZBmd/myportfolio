@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("CONTACT BODY:", body);
-
     const { name, contact, service, message } = body;
 
     if (!name || !contact || !service || !message) {
@@ -14,9 +12,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    console.log("BOT TOKEN:", process.env.TELEGRAM_BOT_TOKEN);
-    console.log("CHAT ID:", process.env.TELEGRAM_CHAT_ID);
 
     const tgRes = await fetch(
       `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -31,8 +26,6 @@ export async function POST(req: Request) {
     );
 
     const tgData = await tgRes.json();
-    console.log("TELEGRAM STATUS:", tgRes.status);
-    console.log("TELEGRAM RESPONSE:", tgData);
 
     if (!tgRes.ok) {
       return NextResponse.json(

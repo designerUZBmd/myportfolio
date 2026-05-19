@@ -1,0 +1,4 @@
+:root {
+  --font-body: 'HelveticaNeue', sans-serif;
+  --navbar-height: clamp(3.5rem, 5vw, 6rem);
+}

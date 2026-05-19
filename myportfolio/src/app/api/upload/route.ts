@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const result = await new Promise<any>((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       { resource_type: "auto" },
-      (error, result) => {
+      (error: Error | undefined, result: unknown) => {
         if (error) reject(error);
         else resolve(result);
       }

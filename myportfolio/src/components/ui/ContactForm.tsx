@@ -1,15 +1,15 @@
 "use client";
 
 export default function ContactForm() {
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
+    const formData = new FormData(e.currentTarget);
 
     const data = {
-      name: form.name.value,
-      contact: form.contact.value,
-      service: form.service.value,
-      message: form.message.value,
+      name: formData.get("name") as string,
+      contact: formData.get("contact") as string,
+      service: formData.get("service") as string,
+      message: formData.get("message") as string,
     };
 
     const res = await fetch("/api/contact", {
@@ -21,8 +21,8 @@ export default function ContactForm() {
     if (!res.ok) {
       alert("Failed to send");
     } else {
-      alert("Sent ✅");
-      form.reset();
+      alert("Sent");
+      e.currentTarget.reset();
     }
   }
 

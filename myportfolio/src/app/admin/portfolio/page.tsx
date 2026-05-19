@@ -12,7 +12,7 @@ type CaseItem = {
   is_published: boolean;
   categories: {
     title: string;
-  } | null;
+  }[] | null;
 };
 
 export default function AdminPortfolioPage() {
@@ -108,7 +108,7 @@ export default function AdminPortfolioPage() {
               <td>{item.title}</td>
               <td align="center">{item.year}</td>
               <td align="center">
-                {item.categories?.title || "—"}
+                {item.categories?.[0]?.title || "—"}
               </td>
               <td align="center">
                 {item.is_published ? "Yes" : "No"}

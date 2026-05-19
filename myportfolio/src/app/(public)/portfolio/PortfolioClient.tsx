@@ -5,13 +5,33 @@ import { useNavigation } from "@/hooks/useNavigation";
 import Link from "next/link";
 import Image from "next/image";
 
+type Category = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
+type PortfolioItem = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  cover_url: string;
+  year: number;
+  is_featured: boolean;
+  categories: {
+    title: string;
+    slug: string;
+  } | null;
+};
+
 export default function PortfolioClient({
   categories,
   items,
   activeCategory,
 }: {
-  categories: any[];
-  items: any[];
+  categories: Category[];
+  items: PortfolioItem[];
   activeCategory?: string;
 }) {
   const { handleNavigation } = useNavigation();
@@ -19,7 +39,7 @@ export default function PortfolioClient({
   return (
     <>
       <div className="revealer"></div>
-      <main style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <main style={{ maxWidth: "min(88vw, 2000px)", margin: "0 auto" }}>
         <h1>Portfolio</h1>
 
         {/* Category Filter */}

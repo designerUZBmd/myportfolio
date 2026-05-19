@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 
@@ -25,7 +26,7 @@ export function useNavigation() {
     );
   }
 
-  const handleNavigation = (path) => (e) => {
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
     if (path === pathname) {
       e.preventDefault();
       return;

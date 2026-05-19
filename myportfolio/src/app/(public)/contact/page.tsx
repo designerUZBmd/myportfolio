@@ -1,5 +1,6 @@
 "use client";
 import { useRevealer } from "@/hooks/useRevealer";
+import ContactForm from "@/components/ui/ContactForm";
 
 export default function Contact() {
   useRevealer();
@@ -8,7 +9,7 @@ export default function Contact() {
     <>
       <div className="revealer"></div>
       <main>
-        <h1>Contact Me</h1>
+        <ContactForm />
       </main>
     </>
   );
