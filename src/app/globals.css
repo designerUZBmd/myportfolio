@@ -15,7 +15,7 @@
   transform-origin: center top;
   background-color: black;
   pointer-events: none;
-  z-index: 2;
+  z-index: 9999;
 }
 
 ::view-transition-old(root),
