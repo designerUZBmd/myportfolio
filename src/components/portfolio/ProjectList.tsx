@@ -168,18 +168,14 @@ export default function ProjectList({
           onMouseEnter={() => setActiveProject(null)}
         >
           <div className="project-item__left">
-            <span className="project-item__index project-item__index--all">+</span>
-            <h3 className="project-item__title project-item__title--all">
-              BARCHA LOYIHALARNI KO‘RISH
-            </h3>
+            <span className="project-item__index">+</span>
+            <h3 className="project-item__title">Barcha loyihalar</h3>
           </div>
 
           <div className="project-item__right">
-            <span className="project-item__category project-item__category--all">
-              To‘liq portfolio arxivi
-            </span>
-            <span className="project-item__badge">Arxiv</span>
-            <span className="project-item__arrow project-item__arrow--all">→</span>
+            <span className="project-item__category">Portfolio arxivi</span>
+            <span className="project-item__year">Arxiv</span>
+            <span className="project-item__arrow">→</span>
           </div>
         </Link>
       </div>

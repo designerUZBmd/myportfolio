@@ -4,9 +4,9 @@ import { useRevealer } from "@/hooks/useRevealer";
 import Image from 'next/image'
 
 import HeroBioText from "@/components/portfolio/HeroBioText";
-
 import ProcessGrid from "@/components/portfolio/ProcessGrid";
 import ProjectList from "@/components/portfolio/ProjectList";
+import DirectionsSection from "@/components/portfolio/DirectionsSection";
 
 export default function Home() {
   useRevealer();
@@ -46,6 +46,9 @@ export default function Home() {
               <ProcessGrid />
               <ProjectList />
             </section>
+
+            {/* Asosiy Yo‘nalishlar Bo‘limi */}
+            <DirectionsSection />
           </div>
         </div>
       </main>

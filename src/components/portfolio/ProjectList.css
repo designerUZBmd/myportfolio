@@ -115,68 +115,28 @@
   color: #13110e;
 }
 
-/* Specific Style for "BARCHA LOYIHALARNI KO‘RISH" row */
+/* Style for "Barcha loyihalar" row */
 .project-item--all {
-  background-color: rgba(19, 17, 14, 0.02);
+  transition: background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.project-item--all .project-item__index--all {
-  font-size: clamp(0.95rem, 1.2vw, 1.3rem);
-  font-weight: 600;
-  color: #13110e;
-  opacity: 0.7;
-}
-
-.project-item--all .project-item__title--all {
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.project-item--all .project-item__category--all {
-  font-weight: 500;
-  color: rgba(19, 17, 14, 0.6);
-}
-
-.project-item__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background-color: rgba(19, 17, 14, 0.08);
-  color: #13110e;
-  font-size: clamp(0.7rem, 0.8vw, 0.825rem);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  transition: background-color 0.35s ease, color 0.35s ease;
-}
-
-.project-item--all .project-item__arrow--all {
-  transform: rotate(0deg);
-  color: #13110e;
-  font-size: clamp(1.2rem, 1.6vw, 1.75rem);
-}
-
-/* Dark Inversion on Hover for the View All row */
 .project-item--all:hover {
-  background-color: #13110e;
-  border-bottom-color: #13110e;
+  background-color: #000000;
+  border-bottom-color: #000000;
 }
 
-.project-item--all:hover .project-item__index--all,
-.project-item--all:hover .project-item__title--all,
-.project-item--all:hover .project-item__category--all,
-.project-item--all:hover .project-item__arrow--all {
+.project-item--all:hover .project-item__index,
+.project-item--all:hover .project-item__title,
+.project-item--all:hover .project-item__category,
+.project-item--all:hover .project-item__year,
+.project-item--all:hover .project-item__arrow {
   color: #ffffff;
 }
 
-.project-item--all:hover .project-item__badge {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.project-item--all:hover .project-item__arrow--all {
-  transform: translateX(6px);
+.project-item--all:hover .project-item__arrow {
+  transform: rotate(0deg) scale(1.15);
 }
 
 /* Three.js WebGL Container */
