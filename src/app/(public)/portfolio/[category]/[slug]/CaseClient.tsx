@@ -1,16 +1,7 @@
 "use client";
 import { useRevealer } from "@/hooks/useRevealer";
 import Image from "next/image";
-
-type GalleryMedia = {
-  type: "image" | "video";
-  url: string;
-};
-
-type CaseSection = {
-  title: string;
-  content: string;
-};
+import { GalleryMedia, CaseSection } from "@/types/database";
 
 type CaseItem = {
   id: string;
@@ -50,11 +41,11 @@ export default function CaseClient({ item }: { item: CaseItem }) {
         <p>{item.excerpt}</p>
 
         {/* Gallery */}
-        {item.gallery && (
+        {item.gallery && item.gallery.length > 0 && (
           <section>
             <h2>Gallery</h2>
             <div style={{ display: "grid", gap: 24 }}>
-              {item.gallery.map((media: any, i: number) => (
+              {item.gallery.map((media: GalleryMedia, i: number) => (
                 <div key={i}>
                   {media.type === "image" ? (
                     <Image src={media.url} alt="" width={800} height={450} />
@@ -68,9 +59,9 @@ export default function CaseClient({ item }: { item: CaseItem }) {
         )}
 
         {/* Sections */}
-        {item.sections && (
+        {item.sections && item.sections.length > 0 && (
           <section>
-            {item.sections.map((section: any, i: number) => (
+            {item.sections.map((section: CaseSection, i: number) => (
               <div key={i}>
                 <h3>{section.title}</h3>
                 <p>{section.content}</p>

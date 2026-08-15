@@ -5,13 +5,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 import { useNavigation } from "@/hooks/useNavigation";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const { handleNavigation } = useNavigation();
-
 
   useEffect(() => {
     async function checkSession() {
@@ -33,6 +34,10 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

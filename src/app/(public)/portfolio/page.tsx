@@ -2,13 +2,13 @@ import PortfolioClient from "./PortfolioClient";
 import { supabase } from "@/lib/supabase";
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
-  };
+  }>;
 };
 
 async function getCategories() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("categories")
     .select("*")
     .eq("is_active", true)

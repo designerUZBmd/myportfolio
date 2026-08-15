@@ -1,0 +1,210 @@
+.project-list {
+  position: relative;
+  width: 100%;
+  margin-top: clamp(4rem, 8vw, 10rem);
+}
+
+.project-list__header {
+  padding: 0 var(--page-gutter);
+  font-size: clamp(0.875rem, 1.1vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: #13110e;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-list__items {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(19, 17, 14, 0.15);
+  width: 100%;
+}
+
+.project-item {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(1.4rem, 2.2vw, 2.2rem) var(--page-gutter);
+  border-bottom: 1px solid rgba(19, 17, 14, 0.15);
+  text-decoration: none;
+  color: #13110e;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-item:hover {
+  background-color: rgba(19, 17, 14, 0.025);
+  border-bottom-color: rgba(19, 17, 14, 0.35);
+}
+
+.project-item__left {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2.5rem);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-item:hover .project-item__left {
+  transform: translateX(10px);
+}
+
+.project-item__index {
+  font-size: clamp(0.75rem, 0.9vw, 0.95rem);
+  font-weight: 500;
+  color: rgba(19, 17, 14, 0.35);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  transition: color 0.3s ease;
+}
+
+.project-item__title {
+  font-size: clamp(1.15rem, 1.8vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #13110e;
+  transition: color 0.3s ease;
+}
+
+.project-item__right {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 2.5vw, 3rem);
+}
+
+.project-item__category {
+  font-size: clamp(0.85rem, 1.05vw, 1.15rem);
+  font-weight: 400;
+  color: rgba(19, 17, 14, 0.5);
+  transition: color 0.3s ease;
+}
+
+.project-item:hover .project-item__category {
+  color: #13110e;
+}
+
+.project-item__year {
+  font-size: clamp(0.85rem, 1.05vw, 1.15rem);
+  font-weight: 400;
+  color: rgba(19, 17, 14, 0.4);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+
+.project-item__arrow {
+  font-size: clamp(1.1rem, 1.5vw, 1.6rem);
+  font-weight: 300;
+  line-height: 1;
+  color: rgba(19, 17, 14, 0.5);
+  transform: rotate(-45deg);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.3s ease;
+}
+
+.project-item:hover .project-item__arrow {
+  transform: rotate(0deg) scale(1.15);
+  color: #13110e;
+}
+
+/* Specific Style for "BARCHA LOYIHALARNI KO‘RISH" row */
+.project-item--all {
+  background-color: rgba(19, 17, 14, 0.02);
+}
+
+.project-item--all .project-item__index--all {
+  font-size: clamp(0.95rem, 1.2vw, 1.3rem);
+  font-weight: 600;
+  color: #13110e;
+  opacity: 0.7;
+}
+
+.project-item--all .project-item__title--all {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.project-item--all .project-item__category--all {
+  font-weight: 500;
+  color: rgba(19, 17, 14, 0.6);
+}
+
+.project-item__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(19, 17, 14, 0.08);
+  color: #13110e;
+  font-size: clamp(0.7rem, 0.8vw, 0.825rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.project-item--all .project-item__arrow--all {
+  transform: rotate(0deg);
+  color: #13110e;
+  font-size: clamp(1.2rem, 1.6vw, 1.75rem);
+}
+
+/* Dark Inversion on Hover for the View All row */
+.project-item--all:hover {
+  background-color: #13110e;
+  border-bottom-color: #13110e;
+}
+
+.project-item--all:hover .project-item__index--all,
+.project-item--all:hover .project-item__title--all,
+.project-item--all:hover .project-item__category--all,
+.project-item--all:hover .project-item__arrow--all {
+  color: #ffffff;
+}
+
+.project-item--all:hover .project-item__badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.project-item--all:hover .project-item__arrow--all {
+  transform: translateX(6px);
+}
+
+/* Three.js WebGL Container */
+.project-webgl-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@media (max-width: 768px) {
+  .project-item {
+    padding: 1.25rem var(--page-gutter);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .project-item__right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .project-webgl-container {
+    display: none;
+  }
+}

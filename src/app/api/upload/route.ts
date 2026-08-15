@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -12,14 +13,16 @@ export async function POST(request: Request) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const result = await new Promise<any>((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      { resource_type: "auto" },
-      (error: Error | undefined, result: unknown) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    ).end(buffer);
+  const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        { resource_type: "auto" },
+        (error: UploadApiErrorResponse | undefined, res: UploadApiResponse | undefined) => {
+          if (error || !res) reject(error || new Error("Upload failed"));
+          else resolve(res);
+        }
+      )
+      .end(buffer);
   });
 
   return NextResponse.json({

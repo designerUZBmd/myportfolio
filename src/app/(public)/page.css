@@ -1,7 +1,3 @@
-.split-layout {
-  /* padding-top: var(--navbar-height); */
-}
-
 .split-layout__left {
   position: fixed;
   top: 0;
@@ -17,53 +13,81 @@
   min-height: calc(100dvh - var(--navbar-height));
 }
 
+.ov {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: clamp(280px, 40dvh, 550px);
+  width: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.ov__svg {
+  height: 100%;
+  width: auto;
+  max-width: none;
+  display: block;
+}
+
 .hero {
   min-height: 100dvh;
   background: linear-gradient(to bottom, #96DFFF, #ffffff);
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   align-items: flex-end;
-  flex-direction: column;
-  padding: clamp(2rem, 3vw, 5rem);
-  text-align: justify;
+  padding: var(--page-gutter);
+  padding-top: calc(var(--page-gutter) + 4rem);
+  box-sizing: border-box;
+  text-align: left;
 }
 
-.tepa {
-  display: flex;
-  align-items: end;
+.hero__container {
+  position: relative;
+  width: 100%;
 }
 
-.hero__content {
+.hero__top-card {
+  position: absolute;
+  bottom: calc(100% - 2em);
+  right: 0;
   display: flex;
-  align-items: top;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: clamp(0.75rem, 1.2vw, 1.5rem);
+  pointer-events: none;
+}
+
+.hero__spacer {
+  float: right;
+  height: 1.35em;
+  width: clamp(300px, 26vw, 620px);
 }
 
 .hero__label {
-  display: block;
+  display: inline-block;
   font-size: clamp(1rem, 1.4vw, 1.7rem);
   font-weight: 700;
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-
-.ov {
-  position: absolute;
-  bottom: 0;
+  white-space: nowrap;
 }
 
 .hero__image {
-  float: right;
-  width: clamp(300px, 20vw, 800px);
+  width: clamp(220px, 20vw, 480px);
   height: auto !important;
 }
 
 .hero__bio {
-  font-size: clamp(1.75rem, 2.5vw, 3rem);
+  position: relative;
+  font-size: clamp(1.35rem, 2vw, 2.4rem);
+  line-height: 1.48;
+  letter-spacing: -0.01em;
 }
 
-.hero__body::after {
+.hero__bio::after {
   content: '';
   display: table;
   clear: both;
@@ -72,5 +96,6 @@
 
 
 .portfolio {
-  height: 200dvh;
+  min-height: 100dvh;
+  padding-bottom: clamp(3rem, 6vw, 8rem);
 }
