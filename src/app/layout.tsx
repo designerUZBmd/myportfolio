@@ -31,6 +31,11 @@ export default function RootLayout({
   return (
     <ViewTransitions>
       <html lang="en" className={inter.variable}>
+        <head>
+          <link rel="preconnect" href="https://res.cloudinary.com" />
+          <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+          <link rel="preconnect" href="https://bwuelpuepfmptrekvejc.supabase.co" />
+        </head>
         <body>
           <Navbar />
           <SmoothScroll>{children}</SmoothScroll>

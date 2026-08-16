@@ -21,6 +21,22 @@ async function getCase(slug: string) {
 
 export const revalidate = 60;
 
+export async function generateStaticParams() {
+  const { data } = await supabase
+    .from("portfolio_cases")
+    .select("slug, categories ( slug )")
+    .eq("is_published", true);
+
+  if (!data) return [];
+
+  return data
+    .filter((item: any) => item.categories?.slug && item.slug)
+    .map((item: any) => ({
+      category: item.categories.slug,
+      slug: item.slug,
+    }));
+}
+
 export default async function Page({ params }: Props) {
   const { slug } = await params; // 👈 MUHIM
 

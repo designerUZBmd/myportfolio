@@ -225,15 +225,18 @@ export default function ProjectPreviewWebGL({
         state.currentAlpha += (state.targetAlpha - state.currentAlpha) * 0.14;
         state.currentScale += (state.targetScale - state.currentScale) * 0.14;
 
-        material.uniforms.uAlpha.value = state.currentAlpha;
-        mesh.scale.setScalar(state.currentScale);
+        // GPU Idle Sleep: Only render when preview is active
+        if (state.currentAlpha > 0.001 || state.targetAlpha > 0) {
+          material.uniforms.uAlpha.value = state.currentAlpha;
+          mesh.scale.setScalar(state.currentScale);
+
+          // Update shader uniforms
+          material.uniforms.uTime.value = elapsedTime;
+          material.uniforms.uDelta.value.set(delta.x, delta.y);
+
+          renderer.render(scene, camera);
+        }
       }
-
-      // Update shader uniforms
-      material.uniforms.uTime.value = elapsedTime;
-      material.uniforms.uDelta.value.set(delta.x, delta.y);
-
-      renderer.render(scene, camera);
     };
 
     animationFrameId = requestAnimationFrame(animate);
