@@ -20,6 +20,8 @@ async function getItemsBySection(sectionId: string) {
   return data || [];
 }
 
+export const revalidate = 60;
+
 export default async function GalleryPage() {
   const sections = await getSections();
 

@@ -19,6 +19,8 @@ async function getCase(slug: string) {
   return data;
 }
 
+export const revalidate = 60;
+
 export default async function Page({ params }: Props) {
   const { slug } = await params; // 👈 MUHIM
 

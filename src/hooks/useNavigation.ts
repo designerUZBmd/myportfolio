@@ -19,8 +19,8 @@ export function useNavigation() {
         },
       ],
       {
-        duration: 450,
-        easing: "cubic-bezier(0.76, 0, 0.24, 1)",
+        duration: 2000,
+        easing: "cubic-bezier(0.9, 0, 0.1, 1)",
         pseudoElement: "::view-transition-new(root)",
       },
     );

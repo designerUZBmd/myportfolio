@@ -45,11 +45,15 @@ async function getPortfolio(category?: string) {
   return data || [];
 }
 
+export const revalidate = 60;
+
 export default async function PortfolioPage({ searchParams }: Props) {
   const { category } = await searchParams;
 
-  const categories = await getCategories();
-  const items = await getPortfolio(category);
+  const [categories, items] = await Promise.all([
+    getCategories(),
+    getPortfolio(category),
+  ]);
 
   return (
     <PortfolioClient
