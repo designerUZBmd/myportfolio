@@ -7,6 +7,8 @@ import HeroBioText from "@/components/portfolio/HeroBioText";
 import ProcessGrid from "@/components/portfolio/ProcessGrid";
 import ProjectList from "@/components/portfolio/ProjectList";
 import DirectionsSection from "@/components/portfolio/DirectionsSection";
+import ClientsMarquee from "@/components/portfolio/ClientsMarquee";
+import FooterSection from "@/components/portfolio/FooterSection";
 
 export default function Home() {
   useRevealer();
@@ -49,6 +51,12 @@ export default function Home() {
 
             {/* Asosiy Yo‘nalishlar Bo‘limi */}
             <DirectionsSection />
+
+            {/* Hamkorlar va Kompaniyalar Bo‘limi */}
+            <ClientsMarquee />
+
+            {/* Footer Bo‘limi (ovloqulo_v.png 1:1) */}
+            <FooterSection />
           </div>
         </div>
       </main>

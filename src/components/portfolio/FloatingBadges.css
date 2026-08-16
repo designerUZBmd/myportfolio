@@ -1,0 +1,143 @@
+.floating-badges-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Perfect Circular Gravity Cards */
+.circle-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(19, 17, 14, 0.12);
+  box-shadow: 0 12px 28px -6px rgba(19, 17, 14, 0.09);
+  user-select: none;
+  will-change: transform;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.1s ease-out;
+}
+
+.circle-card:hover {
+  border-color: rgba(19, 17, 14, 0.4);
+  box-shadow: 0 18px 36px -4px rgba(19, 17, 14, 0.16);
+}
+
+.circle-card__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  color: #13110e;
+}
+
+.circle-card__mini-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(19, 17, 14, 0.6);
+  text-transform: uppercase;
+}
+
+/* Image preview circle cards */
+.circle-card--img {
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid rgba(19, 17, 14, 0.18);
+}
+
+.circle-card__img-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.circle-card__img {
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.circle-card:hover .circle-card__img {
+  transform: scale(1.08);
+}
+
+.circle-card__img-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(19, 17, 14, 0.82);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Metric circle */
+.circle-card__metric-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Stars row */
+.circle-card__stars-row {
+  color: #f59e0b;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+/* Specific icon accent colors */
+.circle-card--idea svg {
+  color: #f59e0b;
+}
+
+.circle-card--problem svg {
+  color: #ef4444;
+}
+
+.circle-card--target svg {
+  color: #0284c7;
+}
+
+.circle-card--rocket svg {
+  color: #8b5cf6;
+}
+
+.circle-card--tool svg {
+  color: #13110e;
+}
+
+.circle-card--chat svg {
+  color: #13110e;
+}
+
+@media (max-width: 768px) {
+  .circle-card {
+    transform: scale(0.85);
+  }
+}
