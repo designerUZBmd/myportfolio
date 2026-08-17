@@ -17,6 +17,10 @@
 html, body {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 html::-webkit-scrollbar,
@@ -29,4 +33,7 @@ body::-webkit-scrollbar {
 body {
   font-family: var(--font-body);
   background-color: #ffffff;
+  min-height: 100vh;
+  position: relative;
 }
+

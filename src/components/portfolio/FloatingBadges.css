@@ -139,5 +139,13 @@
 @media (max-width: 768px) {
   .circle-card {
     transform: scale(0.85);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: #ffffff;
+  }
+
+  .circle-card__img-badge {
+    backdrop-filter: none !important;
+    background: #13110e;
   }
 }

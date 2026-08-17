@@ -67,8 +67,19 @@
 }
 
 @media (max-width: 768px) {
+  .clients-section {
+    padding-top: 1.5rem;
+    padding-bottom: 3.5rem;
+  }
+
   .client-card {
-    width: 150px;
-    padding: 1.25rem 1rem;
+    width: 135px;
+    padding: 1.1rem 0.85rem;
+  }
+
+  .client-logo-svg {
+    max-width: 105px;
+    max-height: 36px;
   }
 }
+

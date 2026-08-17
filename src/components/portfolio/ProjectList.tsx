@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { useNavigation } from "@/hooks/useNavigation";
 import { PortfolioCase } from "@/types/database";
@@ -78,6 +79,7 @@ export default function ProjectList({
     initialProjects || defaultProjects
   );
   const [activeProject, setActiveProject] = useState<ProjectItemData | null>(null);
+  const [activeMobileId, setActiveMobileId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadRealProjects() {
@@ -129,43 +131,172 @@ export default function ProjectList({
     loadRealProjects();
   }, []);
 
+  const [mobileTilt, setMobileTilt] = useState({ x: 0, z: 0 });
+  const sectionRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const currentActiveIdRef = useRef<string | null>(null);
+
+  // Mobile scroll physics and section bounds tracking
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let ticking = false;
+    let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let tiltVelocity = 0;
+    let animId: number;
+
+    const updatePhysics = () => {
+      if (Math.abs(tiltVelocity) > 0.05) {
+        tiltVelocity *= 0.85; // smooth spring decay
+        const clampedTiltX = Math.max(Math.min(tiltVelocity * 0.45, 18), -18);
+        const clampedTiltZ = Math.max(Math.min(-tiltVelocity * 0.08, 4), -4);
+        setMobileTilt({ x: clampedTiltX, z: clampedTiltZ });
+        animId = requestAnimationFrame(updatePhysics);
+      } else {
+        if (tiltVelocity !== 0) {
+          tiltVelocity = 0;
+          setMobileTilt({ x: 0, z: 0 });
+        }
+      }
+    };
+
+    const checkActiveItem = () => {
+      if (window.innerWidth > 768) {
+        if (currentActiveIdRef.current !== null) {
+          currentActiveIdRef.current = null;
+          setActiveMobileId(null);
+          setActiveProject(null);
+        }
+        ticking = false;
+        return;
+      }
+
+      const section = sectionRef.current;
+      if (!section) {
+        ticking = false;
+        return;
+      }
+
+      const currentScrollY = window.scrollY || window.pageYOffset || 0;
+      const diff = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+
+      tiltVelocity = diff;
+      cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(updatePhysics);
+
+      const sectionRect = section.getBoundingClientRect();
+      const centerY = window.innerHeight * 0.5;
+
+      // Only active while screen center is inside the project-list section
+      if (sectionRect.top <= centerY && sectionRect.bottom >= centerY) {
+        let closestProject: ProjectItemData | null = null;
+        let minDistance = Infinity;
+
+        itemRefs.current.forEach((el, index) => {
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const elCenter = rect.top + rect.height / 2;
+          const dist = Math.abs(elCenter - centerY);
+
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestProject = projectsList[index] || null;
+          }
+        });
+
+        const newId = closestProject ? (closestProject as ProjectItemData).id : null;
+        if (newId !== currentActiveIdRef.current) {
+          currentActiveIdRef.current = newId;
+          setActiveMobileId(newId);
+          setActiveProject(closestProject);
+        }
+      } else {
+        // Outside the project-list section height -> hide preview
+        if (currentActiveIdRef.current !== null) {
+          currentActiveIdRef.current = null;
+          setActiveMobileId(null);
+          setActiveProject(null);
+        }
+      }
+
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(checkActiveItem);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    checkActiveItem();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [projectsList]);
+
   return (
-    <section className="project-list">
+    <section ref={sectionRef} className="project-list">
       <div className="project-list__header">
         <span>TANLANGAN LOYIHALAR /</span>
       </div>
 
       <div className="project-list__items">
-        {projectsList.map((project, index) => (
-          <Link
-            key={project.id}
-            href={project.href}
-            className="project-item"
-            onClick={handleNavigation(project.href)}
-            onMouseEnter={() => setActiveProject(project)}
-            onMouseLeave={() => setActiveProject(null)}
-          >
-            <div className="project-item__left">
-              <span className="project-item__index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="project-item__title">{project.title}</h3>
-            </div>
+        {projectsList.map((project, index) => {
+          const isMobileActive = activeMobileId === project.id;
+          return (
+            <Link
+              key={project.id}
+              data-index={index}
+              ref={(el) => {
+                itemRefs.current[index] = el;
+              }}
+              href={project.href}
+              className={`project-item ${isMobileActive ? "is-active" : ""}`}
+              onClick={handleNavigation(project.href)}
+              onMouseEnter={() => {
+                if (window.innerWidth > 768) {
+                  setActiveProject(project);
+                }
+              }}
+              onMouseLeave={() => {
+                if (window.innerWidth > 768) {
+                  setActiveProject(null);
+                }
+              }}
+            >
+              <div className="project-item__left">
+                <span className="project-item__index">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="project-item__title">{project.title}</h3>
+              </div>
 
-            <div className="project-item__right">
-              <span className="project-item__category">{project.category}</span>
-              <span className="project-item__year">{project.year}</span>
-              <span className="project-item__arrow">→</span>
-            </div>
-          </Link>
-        ))}
+              <div className="project-item__right">
+                <span className="project-item__category">{project.category}</span>
+                <span className="project-item__year">{project.year}</span>
+                <span className="project-item__arrow">→</span>
+              </div>
+            </Link>
+          );
+        })}
 
         {/* View All Projects Row */}
         <Link
           href="/portfolio"
           className="project-item project-item--all"
           onClick={handleNavigation("/portfolio")}
-          onMouseEnter={() => setActiveProject(null)}
+          onMouseEnter={() => {
+            if (window.innerWidth > 768) {
+              setActiveProject(null);
+            }
+          }}
         >
           <div className="project-item__left">
             <span className="project-item__index">+</span>
@@ -180,7 +311,36 @@ export default function ProjectList({
         </Link>
       </div>
 
-      {/* Three.js WebGL Floating Paper / Cloth Wave Preview */}
+      {/* Mobile CSS 3D Hardware-Accelerated Center Floating Card */}
+      <div
+        className={`project-mobile-3d-stage ${activeProject ? "is-visible" : ""}`}
+        style={
+          {
+            "--tilt-x": `${mobileTilt.x}deg`,
+            "--tilt-z": `${mobileTilt.z}deg`,
+          } as React.CSSProperties
+        }
+      >
+        <div className="project-mobile-3d-card">
+          {projectsList.map((project) => (
+            <div
+              key={project.id}
+              className={`project-mobile-3d-slide ${
+                activeProject?.id === project.id ? "is-active" : ""
+              }`}
+            >
+              <img
+                src={project.image || "/images/process1.jpg"}
+                alt={project.title}
+                loading="eager"
+                className="project-mobile-3d-img"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Three.js WebGL Floating Paper / Cloth Wave Preview (Desktop Only) */}
       <ProjectPreviewWebGL
         activeProject={activeProject}
         projects={projectsList}

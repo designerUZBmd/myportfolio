@@ -29,12 +29,23 @@ export async function generateStaticParams() {
 
   if (!data) return [];
 
-  return data
-    .filter((item: any) => item.categories?.slug && item.slug)
-    .map((item: any) => ({
-      category: item.categories.slug,
-      slug: item.slug,
-    }));
+  const results: { category: string; slug: string }[] = [];
+
+  for (const item of data) {
+    const rawCat = item.categories;
+    const catSlug = Array.isArray(rawCat)
+      ? rawCat[0]?.slug
+      : (rawCat as { slug?: string } | null)?.slug;
+
+    if (catSlug && item.slug) {
+      results.push({
+        category: catSlug,
+        slug: item.slug,
+      });
+    }
+  }
+
+  return results;
 }
 
 export default async function Page({ params }: Props) {

@@ -41,13 +41,25 @@
   max-width: 100%;
 }
 
+.footer-card__media-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: clamp(1.25rem, 2vw, 2.2rem);
+}
+
+.footer-card__media-box {
+  display: none;
+}
+
 .footer-card__label {
   font-size: clamp(0.95rem, 1.15vw, 1.3rem);
   font-weight: 700;
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: #13110E;
-  margin-bottom: clamp(1.25rem, 2vw, 2.2rem);
+  margin-bottom: 0;
   text-align: right;
   display: inline-block;
 }
@@ -73,16 +85,85 @@
 }
 
 @media (max-width: 992px) {
-  .footer-grid {
-    grid-template-columns: 1fr;
-    min-height: auto;
+  .footer-section {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    background: linear-gradient(to top, #82D9FF 0%, #a0e2ff 25%, #cef0ff 52%, #f2faff 80%, #ffffff 100%);
   }
 
-  .footer-card--blue {
-    min-height: 480px;
+  .footer-grid {
+    grid-template-columns: 1fr;
+    height: 100%;
+    min-height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: transparent;
   }
 
   .footer-card--black {
-    height: 240px;
+    display: none;
+  }
+
+  .footer-card--blue {
+    flex: 1;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: transparent;
+    padding: 0 var(--page-gutter);
+    padding-bottom: calc(var(--page-gutter) + 4.35rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .footer-card__content {
+    margin-top: auto;
+    margin-bottom: 0;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  /* Image and Xullas grouped together stretching to the right edge */
+  .footer-card__media-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: calc(100% - clamp(2rem, 5.5vw, 4rem));
+    margin-left: clamp(2rem, 5.5vw, 4rem);
+    margin-bottom: clamp(1rem, 3vw, 1.6rem);
+    flex-shrink: 0;
+  }
+
+  .footer-card__media-box {
+    display: block;
+    width: 100%;
+    height: clamp(150px, 24vh, 220px);
+    background-color: #13110E;
+  }
+
+  .footer-card__label {
+    text-align: right;
+    margin-bottom: 0.55rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .footer-card__statement {
+    font-size: clamp(1.15rem, 4.4vw, 1.55rem);
+    text-align: left;
+    text-indent: clamp(2rem, 5.5vw, 4rem);
+    line-height: 1.45;
   }
 }
+

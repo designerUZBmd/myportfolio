@@ -35,11 +35,20 @@ export default function HeroBioText({
   const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const coordsRef = useRef<CharCoord[]>([]);
   const [hasEntered, setHasEntered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const words = useMemo(() => text.split(" "), [text]);
 
-  // Measure document coordinates of all characters
+  useEffect(() => {
+    const checkMob = () => setIsMobile(window.innerWidth <= 768);
+    checkMob();
+    window.addEventListener("resize", checkMob, { passive: true });
+    return () => window.removeEventListener("resize", checkMob);
+  }, []);
+
+  // Measure document coordinates of all characters (Desktop only)
   const updateCoords = useCallback(() => {
+    if (window.innerWidth <= 768) return;
     const chars = charRefs.current;
     const len = chars.length;
     if (!len) return;
@@ -66,21 +75,29 @@ export default function HeroBioText({
     const container = containerRef.current;
     if (!container) return;
 
-    // 1. Trigger entrance animation right as the page revealer lifts
+    // Synced entrance right as page revealer curtain lifts
     const entranceTimer = setTimeout(() => {
       setHasEntered(true);
-      updateCoords();
-    }, 1100);
+      if (window.innerWidth > 768) {
+        updateCoords();
+      }
+    }, 1050);
+
+    // If mobile, skip all hover physics and event listeners
+    if (window.innerWidth <= 768) {
+      return () => clearTimeout(entranceTimer);
+    }
 
     const handleResize = () => {
-      updateCoords();
+      if (window.innerWidth > 768) {
+        updateCoords();
+      }
     };
 
     window.addEventListener("resize", handleResize);
 
     const totalChars = charRefs.current.length;
 
-    // Spring Physics State per character for inner layer
     const physics: CharPhysics[] = Array.from({ length: totalChars }, () => ({
       x: 0,
       y: 0,
@@ -101,7 +118,6 @@ export default function HeroBioText({
     let isHovering = false;
     let animationFrameId: number | null = null;
 
-    // Spring Constants: Responsive, bouncy & ultra-fluid
     const STIFFNESS = 0.22;
     const DAMPING = 0.72;
 
@@ -127,17 +143,9 @@ export default function HeroBioText({
 
           if (dist < radius) {
             const intensity = Math.pow(1 - dist / radius, 1.8);
-
-            // 1. Vertical lift
             p.targetY = -intensity * 18;
-
-            // 2. Subtle horizontal wave dispersion away from cursor
             p.targetX = (coords[i].docX - pageMouseX) * (intensity * 0.12);
-
-            // 3. Elastic tilt based on cursor angle
             p.targetRot = ((coords[i].docX - pageMouseX) / radius) * (intensity * -14);
-
-            // 4. Subtle pop scale
             p.targetScale = 1 + intensity * 0.14;
           } else {
             p.targetY = 0;
@@ -152,7 +160,6 @@ export default function HeroBioText({
           p.targetScale = 1;
         }
 
-        // Spring Physics Calculation (F = -k*x - c*v)
         const fx = (p.targetX - p.x) * STIFFNESS;
         p.vx = (p.vx + fx) * DAMPING;
         p.x += p.vx;
@@ -169,7 +176,6 @@ export default function HeroBioText({
         p.vScale = (p.vScale + fScale) * DAMPING;
         p.scale += p.vScale;
 
-        // Check if character is still settling
         if (
           Math.abs(p.vx) > 0.005 ||
           Math.abs(p.vy) > 0.005 ||
@@ -179,7 +185,6 @@ export default function HeroBioText({
           activeMovement = true;
         }
 
-        // Apply hardware-accelerated transform matrix directly to the INNER layer
         span.style.transform = `translate3d(${p.x.toFixed(2)}px, ${p.y.toFixed(2)}px, 0) rotate(${p.rot.toFixed(2)}deg) scale(${p.scale.toFixed(3)})`;
       }
 
@@ -254,35 +259,30 @@ export default function HeroBioText({
               style={{
                 display: "inline-block",
                 whiteSpace: "nowrap",
-                marginLeft: wordIndex === 0 ? "clamp(3rem, 6vw, 8rem)" : undefined,
+                marginLeft: wordIndex === 0 ? "clamp(1.5rem, 5vw, 6rem)" : undefined,
               }}
             >
               {chars.map((char) => {
                 const charIndex = globalCharIndex++;
-                const delay = charIndex * 0.013;
+                const delay = charIndex * 0.012;
                 return (
-                  /* LAYER 1 (OUTER): Handles entrance stagger fade, blur & lift via CSS Transition */
                   <span
                     key={charIndex}
                     style={{
                       display: "inline-block",
                       opacity: hasEntered ? 1 : 0,
-                      filter: hasEntered ? "blur(0px)" : "blur(10px)",
                       transform: hasEntered
                         ? "translate3d(0, 0, 0)"
-                        : "translate3d(0, 24px, 0)",
-                      transition: `opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, filter 0.75s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
-                      willChange: "transform, opacity, filter",
+                        : "translate3d(0, 16px, 0)",
+                      transition: `opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
                     }}
                   >
-                    {/* LAYER 2 (INNER): Handles hover kinetic wave ripple via GPU Spring Physics */}
                     <span
                       ref={(el) => {
                         charRefs.current[charIndex] = el;
                       }}
                       style={{
                         display: "inline-block",
-                        willChange: "transform",
                         userSelect: "none",
                       }}
                     >

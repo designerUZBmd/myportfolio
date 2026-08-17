@@ -192,7 +192,7 @@ export default function DirectionPreviewWebGL({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || window.innerWidth <= 768) return;
 
     const width = window.innerWidth;
     const height = window.innerHeight;

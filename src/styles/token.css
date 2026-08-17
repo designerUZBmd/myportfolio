@@ -1,5 +1,7 @@
 :root {
   --font-body: var(--font-inter), 'Inter', sans-serif;
   --navbar-height: clamp(3.5rem, 5vw, 6rem);
-  --page-gutter: clamp(1.5rem, 2.5vw, 3.5rem);
+  --page-gutter: clamp(1.125rem, 2.5vw, 3.5rem);
+  --tracking-wider: 0.08em;
 }
+
