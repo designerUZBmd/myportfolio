@@ -1,0 +1,263 @@
+/* -------------------------------------------------------------------------
+   EDITORIAL CASE STUDY PAGE (FULL-SCREEN SEAMLESS HERO)
+   ------------------------------------------------------------------------- */
+
+.case-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ededed;
+  color: #111111;
+  font-family: var(--font-body);
+}
+
+/* =========================================================================
+   1. FULL-SCREEN SEAMLESS HERO
+   ========================================================================= */
+.case-hero {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(var(--navbar-height) + 1.5rem) var(--page-gutter) var(--page-gutter);
+  box-sizing: border-box;
+}
+
+.case-hero__media {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.case-hero__media img,
+.case-hero__media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.case-hero__gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.05) 40%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  animation: heroGradientFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+@keyframes heroGradientFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Top Nav / Back Button */
+.case-hero__top {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.case-hero__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.case-hero__back-btn:hover {
+  background: #ffffff;
+  color: #111111;
+  transform: translateX(-4px);
+}
+
+.case-hero__year-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+}
+
+/* Bottom Title & Details in Hero */
+.case-hero__bottom {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  color: #ffffff;
+}
+
+.case-hero__category {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 0.5rem;
+}
+
+.case-hero__title {
+  font-size: clamp(2.5rem, 6.5vw, 6rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  margin: 0 0 1.25rem 0;
+  color: #ffffff;
+}
+
+.case-hero__excerpt {
+  font-size: clamp(1rem, 1.3vw, 1.4rem);
+  line-height: 1.5;
+  max-width: 780px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* =========================================================================
+   2. CONTENT BODY & EDITORIAL METADATA
+   ========================================================================= */
+.case-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(4rem, 8vw, 8rem) var(--page-gutter);
+}
+
+.case-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2.5rem;
+  padding-bottom: 3.5rem;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.15);
+  margin-bottom: clamp(3rem, 6vw, 6rem);
+}
+
+.case-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.case-meta-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: rgba(17, 17, 17, 0.45);
+}
+
+.case-meta-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+/* Sections */
+.case-sections {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.5rem, 6vw, 6rem);
+  margin-bottom: clamp(4rem, 8vw, 8rem);
+}
+
+.case-section-item {
+  max-width: 840px;
+}
+
+.case-section-title {
+  font-size: clamp(1.6rem, 2.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 1.25rem 0;
+  color: #111111;
+}
+
+.case-section-content {
+  font-size: clamp(1rem, 1.15vw, 1.25rem);
+  line-height: 1.7;
+  color: rgba(17, 17, 17, 0.75);
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* =========================================================================
+   3. GALLERY GRID
+   ========================================================================= */
+.case-gallery-section {
+  width: 100%;
+}
+
+.case-gallery-heading {
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 2rem;
+}
+
+.case-gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 3rem);
+}
+
+.case-gallery-item {
+  position: relative;
+  width: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.case-gallery-item img,
+.case-gallery-item video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .case-hero {
+    padding: calc(var(--navbar-height) + 1rem) var(--page-gutter) 2rem;
+  }
+
+  .case-meta-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}
