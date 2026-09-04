@@ -26,9 +26,8 @@ export function useNavigation() {
     );
   }
 
-  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+  const navigateTo = (path: string) => {
     if (path === pathname) {
-      e.preventDefault();
       return;
     }
 
@@ -37,5 +36,12 @@ export function useNavigation() {
     });
   };
 
-  return { handleNavigation };
+  const handleNavigation = (path: string) => (e?: React.MouseEvent) => {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+    navigateTo(path);
+  };
+
+  return { handleNavigation, navigateTo };
 }

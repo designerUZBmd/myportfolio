@@ -17,8 +17,8 @@ async function getCategories() {
   return data || [];
 }
 
-async function getPortfolio(category?: string) {
-  let query = supabase
+async function getPortfolio() {
+  const { data } = await supabase
     .from("portfolio_cases")
     .select(
       `
@@ -29,19 +29,6 @@ async function getPortfolio(category?: string) {
     .eq("is_published", true)
     .order("year", { ascending: false });
 
-  if (category) {
-    const { data: cat } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("slug", category)
-      .single();
-
-    if (cat) {
-      query = query.eq("category_id", cat.id);
-    }
-  }
-
-  const { data } = await query;
   return data || [];
 }
 
@@ -52,7 +39,7 @@ export default async function PortfolioPage({ searchParams }: Props) {
 
   const [categories, items] = await Promise.all([
     getCategories(),
-    getPortfolio(category),
+    getPortfolio(),
   ]);
 
   return (

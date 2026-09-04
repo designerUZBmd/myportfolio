@@ -251,6 +251,35 @@
   display: block;
 }
 
+/* Bottom Footer Navigation */
+.case-footer {
+  margin-top: clamp(4rem, 8vw, 8rem);
+  padding-top: 3rem;
+  border-top: 1px solid rgba(17, 17, 17, 0.15);
+  display: flex;
+  justify-content: center;
+}
+
+.case-footer__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  background-color: #111111;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 9999px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+  cursor: pointer;
+}
+
+.case-footer__btn:hover {
+  transform: scale(1.04);
+  background-color: #222222;
+}
+
 @media (max-width: 768px) {
   .case-hero {
     padding: calc(var(--navbar-height) + 1rem) var(--page-gutter) 2rem;

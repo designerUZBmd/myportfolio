@@ -4,6 +4,8 @@ import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
+import { useRevealer } from "@/hooks/useRevealer";
+import { useNavigation } from "@/hooks/useNavigation";
 import { GalleryMedia, CaseSection } from "@/types/database";
 import "./CaseClient.css";
 
@@ -24,6 +26,8 @@ type CaseItem = {
 };
 
 export default function CaseClient({ item }: { item: CaseItem }) {
+  useRevealer();
+  const { handleNavigation } = useNavigation();
   const heroContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,41 +52,47 @@ export default function CaseClient({ item }: { item: CaseItem }) {
   const categoryTitle = item.categories?.title || "Product Design";
 
   return (
-    <main className="case-page">
-      {/* 1. FULL-SCREEN SEAMLESS HERO (Matches the expanded 3D card image) */}
-      <section className="case-hero">
-        <div className="case-hero__media">
-          {item.cover_type === "video" ? (
-            <video
-              src={item.cover_url}
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-          ) : (
-            <Image
-              src={item.cover_url}
-              alt={item.title}
-              fill
-              priority
-              quality={90}
-              style={{ objectFit: "cover" }}
-            />
-          )}
-        </div>
+    <>
+      <div className="revealer"></div>
+      <main className="case-page">
+        {/* 1. FULL-SCREEN HERO */}
+        <section className="case-hero">
+          <div className="case-hero__media">
+            {item.cover_type === "video" ? (
+              <video
+                src={item.cover_url}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <Image
+                src={item.cover_url}
+                alt={item.title}
+                fill
+                priority
+                quality={90}
+                style={{ objectFit: "cover" }}
+              />
+            )}
+          </div>
 
-        <div className="case-hero__gradient" />
+          <div className="case-hero__gradient" />
 
-        {/* Top bar with Back Button */}
-        <div className="case-hero__top">
-          <Link href="/portfolio" className="case-hero__back-btn">
-            <span>←</span>
-            <span>All Projects</span>
-          </Link>
+          {/* Top bar with Back Button */}
+          <div className="case-hero__top">
+            <Link
+              href="/portfolio"
+              className="case-hero__back-btn"
+              onClick={handleNavigation("/portfolio")}
+            >
+              <span>←</span>
+              <span>All Projects</span>
+            </Link>
 
-          <span className="case-hero__year-badge">{item.year}</span>
-        </div>
+            <span className="case-hero__year-badge">{item.year}</span>
+          </div>
 
         {/* Hero Bottom Headline & Excerpt */}
         <div ref={heroContentRef} className="case-hero__bottom">
@@ -125,7 +135,7 @@ export default function CaseClient({ item }: { item: CaseItem }) {
         {item.sections && item.sections.length > 0 && (
           <section className="case-sections">
             {item.sections.map((section: CaseSection, i: number) => (
-              <div key={section.id || i} className="case-section-item">
+              <div key={i} className="case-section-item">
                 <h2 className="case-section-title">{section.title}</h2>
                 <p className="case-section-content">{section.content}</p>
               </div>
@@ -139,7 +149,7 @@ export default function CaseClient({ item }: { item: CaseItem }) {
             <h2 className="case-gallery-heading">Visual Showcase</h2>
             <div className="case-gallery-grid">
               {item.gallery.map((media: GalleryMedia, i: number) => (
-                <div key={media.id || i} className="case-gallery-item">
+                <div key={i} className="case-gallery-item">
                   {media.type === "video" ? (
                     <video src={media.url} controls width="100%" />
                   ) : (
@@ -156,7 +166,19 @@ export default function CaseClient({ item }: { item: CaseItem }) {
             </div>
           </section>
         )}
+
+        {/* Bottom Back Button */}
+        <div className="case-footer">
+          <Link
+            href="/portfolio"
+            className="case-footer__btn"
+            onClick={handleNavigation("/portfolio")}
+          >
+            <span>← Barcha loyihalarga qaytish</span>
+          </Link>
+        </div>
       </div>
     </main>
+  </>
   );
 }

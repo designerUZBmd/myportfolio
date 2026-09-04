@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import * as THREE from "three";
-import gsap from "gsap";
-import { GalleryMedia, CaseSection } from "@/types/database";
+import { useNavigation } from "@/hooks/useNavigation";
 import "./Portfolio3DShowcase.css";
 
 export type Category = {
@@ -27,8 +24,6 @@ export type PortfolioItem = {
     title: string;
     slug: string;
   } | null;
-  gallery?: GalleryMedia[];
-  sections?: CaseSection[];
 };
 
 interface Portfolio3DShowcaseProps {
@@ -43,99 +38,87 @@ interface CardObject {
   originalIndex: number;
 }
 
-// Synthesize pleasant tactile tick sound
-function playHapticTick() {
-  if (typeof window === "undefined") return;
-  try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(320, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.035);
-
-    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.035);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.04);
-  } catch {
-    // Ignore audio restrictions
-  }
-}
-
 export default function Portfolio3DShowcase({
   categories,
   items,
   activeCategory,
 }: Portfolio3DShowcaseProps) {
-  const router = useRouter();
+  const { navigateTo } = useNavigation();
 
   const showcaseRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
-  const topBarRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const centerActionRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
-  const bottomRightRef = useRef<HTMLDivElement>(null);
-  const spatialTopRef = useRef<HTMLDivElement>(null);
-  const spatialHeroRef = useRef<HTMLDivElement>(null);
+
+  // In-page category selection without full-page navigation / ViewTransition conflicts
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    activeCategory || ""
+  );
+
+  useEffect(() => {
+    if (activeCategory !== undefined) {
+      setSelectedCategory(activeCategory || "");
+    }
+  }, [activeCategory]);
+
+  // Client-side instant filter: 0ms latency, zero server roundtrips
+  const filteredItems = useMemo(() => {
+    if (!selectedCategory) return items;
+    return items.filter((item) => item.categories?.slug === selectedCategory);
+  }, [items, selectedCategory]);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [isCaseOpen, setIsCaseOpen] = useState(false);
-  const [activeCaseItem, setActiveCaseItem] = useState<PortfolioItem | null>(null);
+  const [activeReelIndex, setActiveReelIndex] = useState(0);
 
   const activeIndexRef = useRef(0);
   const targetProgressRef = useRef(0);
   const currentProgressRef = useRef(0);
-  const isCaseOpenRef = useRef(false);
-  const isReturningRef = useRef(false);
   const cardsRef = useRef<CardObject[]>([]);
-  const openCaseRef = useRef<((item: PortfolioItem, mesh: THREE.Mesh) => void) | null>(null);
-  const closeCaseRef = useRef<(() => void) | null>(null);
+  const titleItemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileTitleItemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const currentItemsRef = useRef<PortfolioItem[]>(filteredItems);
+  const textureCacheRef = useRef<Map<string, THREE.Texture>>(new Map());
+  const buildCardsRef = useRef<((itemsList: PortfolioItem[]) => void) | null>(null);
 
-  // Filter items by category if selected
-  const filteredItems = useMemo(() => {
-    if (!activeCategory) return items;
-    return items.filter((item) => item.categories?.slug === activeCategory);
-  }, [items, activeCategory]);
+  const count = filteredItems.length;
+  const repeatFactor = count > 1 && count < 8 ? Math.ceil(8 / count) : 1;
+  const totalReel = count * repeatFactor;
+
+  const reelItems = useMemo(() => {
+    if (count <= 1) {
+      return filteredItems.map((item, idx) => ({
+        ...item,
+        reelKey: `reel-${item.id}-0`,
+        originalIdx: idx,
+      }));
+    }
+    const list: (PortfolioItem & { reelKey: string; originalIdx: number })[] = [];
+    for (let r = 0; r < repeatFactor; r++) {
+      filteredItems.forEach((item, idx) => {
+        list.push({
+          ...item,
+          reelKey: `reel-${item.id}-${r}`,
+          originalIdx: idx,
+        });
+      });
+    }
+    return list;
+  }, [filteredItems, count, repeatFactor]);
 
   const activeProject = filteredItems[activeIndex] || filteredItems[0] || null;
 
-  // Category filter switch handler
-  const handleCategoryClick = useCallback(
-    (slug?: string) => {
-      if (isCaseOpenRef.current || isReturningRef.current) return;
-      targetProgressRef.current = 0;
-      currentProgressRef.current = 0;
-      setActiveIndex(0);
-      activeIndexRef.current = 0;
+  // Instant in-page filter: shallow URL update, NO heavy PageTransition
+  const handleCategoryClick = useCallback((slug?: string) => {
+    const nextSlug = slug || "";
+    setSelectedCategory(nextSlug);
 
-      if (!slug) {
-        router.push("/portfolio");
-      } else {
-        router.push(`/portfolio?category=${slug}`);
-      }
-    },
-    [router]
-  );
+    const path = nextSlug ? `/portfolio?category=${nextSlug}` : "/portfolio";
+    window.history.replaceState(null, "", path);
+  }, []);
 
   // Jump to specific project in list
   const scrollToProject = useCallback(
     (index: number) => {
-      if (isCaseOpenRef.current || isReturningRef.current || filteredItems.length === 0) return;
-      const count = filteredItems.length;
+      const count = currentItemsRef.current.length;
+      if (count <= 1) return;
       const current = currentProgressRef.current;
       const currentWrapped = ((Math.round(current) % count) + count) % count;
 
@@ -144,14 +127,14 @@ export default function Portfolio3DShowcase({
       if (diff < -count / 2) diff += count;
 
       targetProgressRef.current = Math.round(current + diff);
-      if (audioEnabled) playHapticTick();
     },
-    [filteredItems.length, audioEnabled]
+    []
   );
 
+  // 1. SETUP THREE.JS ENGINE ONCE (Renderer & Canvas never destroyed on filter)
   useEffect(() => {
     const container = canvasWrapperRef.current;
-    if (!container || filteredItems.length === 0) return;
+    if (!container) return;
 
     let width = container.clientWidth || window.innerWidth;
     let height = container.clientHeight || window.innerHeight;
@@ -159,7 +142,8 @@ export default function Portfolio3DShowcase({
     // Three.js Scene & Perspective Camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0, 8.5);
+    const initialZ = width < 720 ? Math.max(8.5, 8.5 * (0.62 / Math.max(width / height, 0.4))) : 8.5;
+    camera.position.set(0, 0, initialZ);
 
     // WebGL Renderer
     const renderer = new THREE.WebGLRenderer({
@@ -173,559 +157,298 @@ export default function Portfolio3DShowcase({
     container.appendChild(renderer.domElement);
 
     // Responsive Card Dimensions
-    const isMobile = width < 768;
-    const cardWidth = isMobile ? 3.0 : 4.0;
+    const isMobile = width < 720;
+    const isTablet = width >= 720 && width < 1024;
+    const cardWidth = isMobile ? 3.25 : isTablet ? 3.3 : 4.0;
     const cardHeight = cardWidth * 0.68;
     const cardAspect = cardWidth / cardHeight;
 
-    // 32x32 segments enable smooth cloth / liquid wave deformation
     const geometry = new THREE.PlaneGeometry(cardWidth, cardHeight, 32, 32);
     const textureLoader = new THREE.TextureLoader();
     textureLoader.setCrossOrigin("anonymous");
 
-    // Total display cards in infinite loop
-    const count = filteredItems.length;
-    const displayCount = Math.max(count, 5);
+    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let currentProgress = 0;
+    let lastActiveTotalIdx = 0;
 
-    const cards: CardObject[] = [];
-
-    for (let i = 0; i < displayCount; i++) {
-      const originalIdx = i % count;
-      const item = filteredItems[originalIdx];
-
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 1.0,
-        side: THREE.DoubleSide,
-        depthWrite: false,
+    // Dynamic Card Builder (swaps meshes in existing scene without restarting WebGL)
+    const buildCards = (itemsList: PortfolioItem[]) => {
+      // Clean up previous cards in scene
+      cardsRef.current.forEach((c) => {
+        scene.remove(c.mesh);
+        c.material.dispose();
       });
+      cardsRef.current = [];
 
-      // Hook dynamic Object-Fit: Cover UV directly into Three.js material
-      material.onBeforeCompile = (shader) => {
-        shader.uniforms.uTime = { value: 0 };
-        shader.uniforms.uVelocity = { value: 0 };
-        shader.uniforms.uFlyProgress = { value: 0 };
-        shader.uniforms.uCardAspect = { value: cardAspect };
-        shader.uniforms.uScreenAspect = { value: width / height };
-        shader.uniforms.uImageAspect = { value: 16 / 9 };
+      const count = itemsList.length;
+      if (count === 0) return;
 
-        shader.vertexShader = `
-          uniform float uTime;
-          uniform float uVelocity;
-          uniform float uFlyProgress;
-        ` + shader.vertexShader;
+      const repeatFactor = count > 1 && count < 8 ? Math.ceil(8 / count) : 1;
+      const totalCards = count * repeatFactor;
+      const newCards: CardObject[] = [];
 
-        shader.vertexShader = shader.vertexShader.replace(
-          "#include <begin_vertex>",
-          `
-          #include <begin_vertex>
-          
-          // Organic 3D cloth wave (fades to flat during expansion)
-          float wave1 = sin(uv.x * 4.5 + uTime * 2.2) * cos(uv.y * 4.0 + uTime * 1.8);
-          float wave2 = sin((uv.x + uv.y) * 5.0 - uTime * 2.4) * 0.45;
-          float dragBend = sin(uv.y * 3.14159265) * uVelocity * 0.45;
-          float zWave = ((wave1 + wave2) * (0.05 + abs(uVelocity) * 0.18) + dragBend) * (1.0 - uFlyProgress);
+      for (let i = 0; i < totalCards; i++) {
+        const originalIdx = i % count;
+        const item = itemsList[originalIdx];
 
-          transformed.z += zWave;
-          transformed.x += sin(uv.y * 3.14159265) * uVelocity * 0.08 * (1.0 - uFlyProgress);
-          `
-        );
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 1.0,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
 
-        shader.fragmentShader = `
-          uniform float uTime;
-          uniform float uVelocity;
-          uniform float uFlyProgress;
-          uniform float uCardAspect;
-          uniform float uScreenAspect;
-          uniform float uImageAspect;
-        ` + shader.fragmentShader;
+        material.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          shader.uniforms.uVelocity = { value: 0 };
+          shader.uniforms.uCardAspect = { value: cardAspect };
+          shader.uniforms.uImageAspect = { value: 16 / 9 };
 
-        shader.fragmentShader = shader.fragmentShader.replace(
-          "#include <map_fragment>",
-          `
-          #ifdef USE_MAP
-            float speed = clamp(abs(uVelocity) * 1.5, 0.0, 1.0) * (1.0 - uFlyProgress);
-            vec2 liquidDistort = vec2(
-              sin(vMapUv.y * 12.0 + uTime * 3.0) * (0.003 + speed * 0.015),
-              cos(vMapUv.x * 12.0 + uTime * 2.5) * (0.003 + speed * 0.015)
-            );
-            
-            // Dynamic Container Aspect (seamlessly transitions from Card Aspect to Screen Aspect)
-            float currentAspect = mix(uCardAspect, uScreenAspect, uFlyProgress);
-            
-            // Mathematical 1-to-1 exact Object-Fit: Cover UV
-            vec2 coverUv = vMapUv;
-            if (currentAspect > uImageAspect) {
-              coverUv = vec2(vMapUv.x, (vMapUv.y - 0.5) * (uImageAspect / currentAspect) + 0.5);
-            } else {
-              coverUv = vec2((vMapUv.x - 0.5) * (currentAspect / uImageAspect) + 0.5, vMapUv.y);
-            }
+          shader.vertexShader = `
+            uniform float uTime;
+            uniform float uVelocity;
+          ` + shader.vertexShader;
 
-            vec2 finalUv = coverUv + liquidDistort;
-            vec4 sampledDiffuseColor = texture2D(map, clamp(finalUv, 0.001, 0.999));
-            diffuseColor *= sampledDiffuseColor;
-          #endif
-          `
-        );
+          shader.vertexShader = shader.vertexShader.replace(
+            "#include <begin_vertex>",
+            `
+            #include <begin_vertex>
+            float wave1 = sin(uv.x * 4.5 + uTime * 2.2) * cos(uv.y * 4.0 + uTime * 1.8);
+            float wave2 = sin((uv.x + uv.y) * 5.0 - uTime * 2.4) * 0.45;
+            float dragBend = sin(uv.y * 3.14159265) * uVelocity * 0.45;
+            float zWave = (wave1 + wave2) * (0.05 + abs(uVelocity) * 0.18) + dragBend;
 
-        material.userData.shader = shader;
-      };
+            transformed.z += zWave;
+            transformed.x += sin(uv.y * 3.14159265) * uVelocity * 0.08;
+            `
+          );
 
-      // Load project cover texture
-      if (item?.cover_url) {
-        textureLoader.load(
-          item.cover_url,
-          (tex) => {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.generateMipmaps = true;
-            tex.minFilter = THREE.LinearFilter;
-            tex.magFilter = THREE.LinearFilter;
-            material.map = tex;
+          shader.fragmentShader = `
+            uniform float uTime;
+            uniform float uVelocity;
+            uniform float uCardAspect;
+            uniform float uImageAspect;
+          ` + shader.fragmentShader;
+
+          shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <map_fragment>",
+            `
+            #ifdef USE_MAP
+              float speed = clamp(abs(uVelocity) * 1.5, 0.0, 1.0);
+              vec2 liquidDistort = vec2(
+                sin(vMapUv.y * 12.0 + uTime * 3.0) * (0.003 + speed * 0.015),
+                cos(vMapUv.x * 12.0 + uTime * 2.5) * (0.003 + speed * 0.015)
+              );
+              
+              vec2 coverUv = vMapUv;
+              if (uCardAspect > uImageAspect) {
+                coverUv = vec2(vMapUv.x, (vMapUv.y - 0.5) * (uImageAspect / uCardAspect) + 0.5);
+              } else {
+                coverUv = vec2((vMapUv.x - 0.5) * (uCardAspect / uImageAspect) + 0.5, vMapUv.y);
+              }
+
+              vec2 finalUv = coverUv + liquidDistort;
+              vec4 sampledDiffuseColor = texture2D(map, clamp(finalUv, 0.001, 0.999));
+              diffuseColor *= sampledDiffuseColor;
+            #endif
+            `
+          );
+
+          material.userData.shader = shader;
+        };
+
+        // Cache textures to make category switching instant
+        if (item?.cover_url) {
+          const cachedTex = textureCacheRef.current.get(item.cover_url);
+          if (cachedTex) {
+            material.map = cachedTex;
             material.needsUpdate = true;
-
-            // Compute true natural aspect ratio of the image
-            if (tex.image) {
-              const imgW = tex.image.naturalWidth || tex.image.width || 1920;
-              const imgH = tex.image.naturalHeight || tex.image.height || 1080;
-              if (imgH > 0 && material.userData.shader) {
+            const img = cachedTex.image as HTMLImageElement | undefined;
+            if (img && material.userData.shader) {
+              const imgW = img.naturalWidth || img.width || 1920;
+              const imgH = img.naturalHeight || img.height || 1080;
+              if (imgH > 0) {
                 material.userData.shader.uniforms.uImageAspect.value = imgW / imgH;
               }
             }
-          },
-          undefined,
-          (err) => console.warn("Failed to load image:", item.cover_url, err)
-        );
-      }
+          } else {
+            textureLoader.load(
+              item.cover_url,
+              (tex) => {
+                tex.colorSpace = THREE.SRGBColorSpace;
+                tex.generateMipmaps = true;
+                tex.minFilter = THREE.LinearFilter;
+                tex.magFilter = THREE.LinearFilter;
+                textureCacheRef.current.set(item.cover_url, tex);
+                material.map = tex;
+                material.needsUpdate = true;
 
-      const mesh = new THREE.Mesh(geometry, material);
-      (mesh as unknown as { projectIndex: number }).projectIndex = originalIdx;
-      scene.add(mesh);
-
-      cards.push({ mesh, material, originalIndex: originalIdx });
-    }
-
-    cardsRef.current = cards;
-
-    let expandedMeshRef: THREE.Mesh | null = null;
-    const flyState = { progress: 0 };
-    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
-
-    // 1. OPEN CASE: Fluidly glide surrounding UI to sides, expand 3D card, and reveal spatial hero
-    const openCase = (item: PortfolioItem, activeCardMesh: THREE.Mesh) => {
-      if (isCaseOpenRef.current || isReturningRef.current) return;
-      isCaseOpenRef.current = true;
-      setIsCaseOpen(true);
-      setActiveCaseItem(item);
-      expandedMeshRef = activeCardMesh;
-
-      // Update URL without page reload
-      const url = `/portfolio/${item.categories?.slug || "case"}/${item.slug}`;
-      window.history.pushState({ caseOpen: true, slug: item.slug }, "", url);
-
-      // A. Surrounding UI elements smoothly float out to the sides with opacity
-      if (leftColRef.current) {
-        gsap.to(leftColRef.current, {
-          x: -80,
-          opacity: 0,
-          duration: 0.65,
-          ease: "power2.inOut",
-        });
-      }
-
-      if (rightColRef.current) {
-        gsap.to(rightColRef.current, {
-          x: 80,
-          opacity: 0,
-          duration: 0.65,
-          ease: "power2.inOut",
-        });
-      }
-
-      if (topBarRef.current) {
-        gsap.to(topBarRef.current, {
-          y: -40,
-          opacity: 0,
-          duration: 0.55,
-          ease: "power2.inOut",
-        });
-      }
-
-      if (centerActionRef.current) {
-        gsap.to(centerActionRef.current, {
-          y: 40,
-          opacity: 0,
-          duration: 0.55,
-          ease: "power2.inOut",
-        });
-      }
-
-      if (scrollHintRef.current) {
-        gsap.to(scrollHintRef.current, {
-          y: 40,
-          opacity: 0,
-          duration: 0.55,
-          ease: "power2.inOut",
-        });
-      }
-
-      if (bottomRightRef.current) {
-        gsap.to(bottomRightRef.current, {
-          y: 40,
-          opacity: 0,
-          duration: 0.55,
-          ease: "power2.inOut",
-        });
-      }
-
-      // B. Fade out non-active 3D cards
-      cards.forEach((c) => {
-        if (c.mesh !== activeCardMesh) {
-          gsap.to(c.material, { opacity: 0, duration: 0.5, ease: "power2.out" });
-        }
-      });
-
-      // C. Calculate exact scale needed to cover the entire camera viewport
-      const currentW = width;
-      const currentH = height;
-      const aspect = currentW / currentH;
-      const vFov = (camera.fov * Math.PI) / 180;
-      const viewHeight = 2 * Math.tan(vFov / 2) * 8.5;
-      const viewWidth = viewHeight * aspect;
-
-      const targetScaleX = viewWidth / cardWidth;
-      const targetScaleY = viewHeight / cardHeight;
-
-      const cardMat = activeCardMesh.material as THREE.MeshBasicMaterial;
-      const duration = 0.95;
-      const ease = "power3.inOut";
-
-      gsap.to(flyState, {
-        progress: 1.0,
-        duration: duration,
-        ease: ease,
-        onUpdate: () => {
-          if (cardMat.userData.shader) {
-            cardMat.userData.shader.uniforms.uFlyProgress.value = flyState.progress;
-            cardMat.userData.shader.uniforms.uScreenAspect.value = aspect;
-          }
-        },
-      });
-
-      gsap.to(activeCardMesh.rotation, {
-        x: 0,
-        y: 0,
-        z: 0,
-        duration: duration,
-        ease: ease,
-      });
-
-      gsap.to(activeCardMesh.position, {
-        x: 0,
-        y: 0,
-        z: 0.05,
-        duration: duration,
-        ease: ease,
-      });
-
-      gsap.to(activeCardMesh.scale, {
-        x: targetScaleX,
-        y: targetScaleY,
-        duration: duration,
-        ease: ease,
-        onComplete: () => {
-          // D. Once the card fills the screen, smoothly reveal spatial hero contents
-          if (spatialTopRef.current) {
-            gsap.fromTo(
-              spatialTopRef.current,
-              { opacity: 0, y: -25 },
-              { opacity: 1, y: 0, duration: 0.75, ease: "power3.out" }
+                const img = tex.image as HTMLImageElement | undefined;
+                if (img && material.userData.shader) {
+                  const imgW = img.naturalWidth || img.width || 1920;
+                  const imgH = img.naturalHeight || img.height || 1080;
+                  if (imgH > 0) {
+                    material.userData.shader.uniforms.uImageAspect.value = imgW / imgH;
+                  }
+                }
+              },
+              undefined,
+              (err) => console.warn("Failed to load image:", item.cover_url, err)
             );
           }
-
-          if (spatialHeroRef.current) {
-            gsap.fromTo(
-              spatialHeroRef.current.children,
-              { opacity: 0, y: 45 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.85,
-                stagger: 0.12,
-                ease: "power3.out",
-              }
-            );
-          }
-        },
-      });
-    };
-
-    // 2. CLOSE CASE: Symmetrically shrink 3D card back to reel and glide surrounding UI back in
-    const closeCase = () => {
-      if (!isCaseOpenRef.current || !expandedMeshRef || isReturningRef.current) return;
-      isCaseOpenRef.current = false;
-      isReturningRef.current = true;
-      setIsCaseOpen(false);
-
-      // A. Fade out spatial case hero elements smoothly
-      if (spatialTopRef.current) {
-        gsap.to(spatialTopRef.current, { opacity: 0, y: -15, duration: 0.3 });
-      }
-      if (spatialHeroRef.current) {
-        gsap.to(spatialHeroRef.current.children, { opacity: 0, y: 25, duration: 0.3 });
-      }
-
-      // Scroll window back to top smoothly
-      if (showcaseRef.current) {
-        showcaseRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-      // Restore portfolio URL
-      const backUrl = "/portfolio" + (activeCategory ? `?category=${activeCategory}` : "");
-      window.history.pushState(null, "", backUrl);
-
-      const activeCardMesh = expandedMeshRef;
-      const cardMat = activeCardMesh.material as THREE.MeshBasicMaterial;
-      const duration = 0.85;
-      const ease = "power3.inOut";
-
-      // B. Smoothly ease uFlyProgress back to 0
-      gsap.to(flyState, {
-        progress: 0.0,
-        duration: duration,
-        ease: ease,
-        onUpdate: () => {
-          if (cardMat.userData.shader) {
-            cardMat.userData.shader.uniforms.uFlyProgress.value = flyState.progress;
-          }
-        },
-      });
-
-      // C. Calculate exact target 3D position & rotation in the reel for the active card
-      const originalIdx = (activeCardMesh as unknown as { projectIndex: number }).projectIndex;
-      let diff = originalIdx - (currentProgressRef.current % count);
-      while (diff > count / 2) diff -= count;
-      while (diff < -count / 2) diff += count;
-
-      const absDiff = Math.abs(diff);
-      const targetY = -diff * 3.3;
-      const targetX = -diff * 1.5;
-      const targetZ = -Math.pow(absDiff, 1.25) * 2.8;
-
-      const targetRotX = diff * 0.42 + mouse.y * 0.1;
-      const targetRotY = -diff * 0.35 + mouse.x * 0.12;
-      const targetRotZ = diff * 0.1;
-
-      const targetScale = Math.max(0.65, 1.05 - absDiff * 0.18);
-
-      // Smoothly animate 3D card back into its angled slot
-      gsap.to(activeCardMesh.rotation, {
-        x: targetRotX,
-        y: targetRotY,
-        z: targetRotZ,
-        duration: duration,
-        ease: ease,
-      });
-
-      gsap.to(activeCardMesh.position, {
-        x: targetX,
-        y: targetY,
-        z: targetZ,
-        duration: duration,
-        ease: ease,
-      });
-
-      gsap.to(activeCardMesh.scale, {
-        x: targetScale,
-        y: targetScale,
-        duration: duration,
-        ease: ease,
-        onComplete: () => {
-          isReturningRef.current = false;
-          expandedMeshRef = null;
-          setActiveCaseItem(null);
-        },
-      });
-
-      // D. Restore non-active cards opacity smoothly
-      cards.forEach((c) => {
-        if (c.mesh !== activeCardMesh) {
-          gsap.to(c.material, { opacity: 1.0, duration: 0.5, ease: "power2.out", delay: 0.2 });
         }
-      });
 
-      // E. Glide showcase UI elements back in from the sides
-      if (leftColRef.current) {
-        gsap.fromTo(
-          leftColRef.current,
-          { x: -80, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.75, ease: "power3.out", delay: 0.2 }
-        );
+        const mesh = new THREE.Mesh(geometry, material);
+        (mesh as unknown as { projectIndex: number; cardIndex: number }).projectIndex = originalIdx;
+        (mesh as unknown as { projectIndex: number; cardIndex: number }).cardIndex = i;
+        scene.add(mesh);
+
+        newCards.push({ mesh, material, originalIndex: originalIdx });
       }
 
-      if (rightColRef.current) {
-        gsap.fromTo(
-          rightColRef.current,
-          { x: 80, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.75, ease: "power3.out", delay: 0.2 }
-        );
-      }
-
-      if (topBarRef.current) {
-        gsap.fromTo(
-          topBarRef.current,
-          { y: -40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.65, ease: "power3.out", delay: 0.25 }
-        );
-      }
-
-      if (centerActionRef.current) {
-        gsap.fromTo(
-          centerActionRef.current,
-          { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.65, ease: "power3.out", delay: 0.25 }
-        );
-      }
-
-      if (scrollHintRef.current) {
-        gsap.fromTo(
-          scrollHintRef.current,
-          { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.65, ease: "power3.out", delay: 0.25 }
-        );
-      }
-
-      if (bottomRightRef.current) {
-        gsap.fromTo(
-          bottomRightRef.current,
-          { y: 40, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.65, ease: "power3.out", delay: 0.25 }
-        );
-      }
+      cardsRef.current = newCards;
+      titleItemsRef.current = [];
+      mobileTitleItemsRef.current = [];
+      targetProgressRef.current = 0;
+      currentProgressRef.current = 0;
+      currentProgress = 0;
+      lastActiveTotalIdx = 0;
+      activeIndexRef.current = 0;
+      setActiveIndex(0);
+      setActiveReelIndex(0);
     };
 
-    openCaseRef.current = openCase;
-    closeCaseRef.current = closeCase;
+    buildCardsRef.current = buildCards;
 
-    // Handle browser Back / Forward buttons
-    const handlePopState = () => {
-      if (isCaseOpenRef.current) {
-        closeCase();
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-
-    // Scroll & Physics Tracking
-    let targetProgress = targetProgressRef.current;
-    let currentProgress = currentProgressRef.current;
-    let lastActiveIdx = activeIndexRef.current;
+    // Initial build of cards
+    buildCards(currentItemsRef.current);
 
     // Pointer Interaction State
+    let pointerDown = false;
     let isDragging = false;
     let startX = 0;
     let startY = 0;
     let lastY = 0;
-    let dragDistance = 0;
+    let lastX = 0;
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (isCaseOpenRef.current || isReturningRef.current) return;
       const target = e.target as HTMLElement;
       if (
         target.closest("button") ||
-        target.closest(".huyml-showcase__cat-chip") ||
+        target.closest("a") ||
+        target.closest(".huyml-showcase__category-nav") ||
         target.closest(".huyml-showcase__title-item") ||
-        target.closest(".spatial-case")
+        target.closest(".huyml-showcase__mobile-title-item")
       ) {
         return;
       }
 
-      isDragging = true;
+      pointerDown = true;
+      isDragging = false;
       startX = e.clientX;
       startY = e.clientY;
       lastY = e.clientY;
-      dragDistance = 0;
+      lastX = e.clientX;
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (isCaseOpenRef.current || isReturningRef.current) return;
       mouse.targetX = (e.clientX / width) * 2 - 1;
       mouse.targetY = -(e.clientY / height) * 2 + 1;
 
-      if (!isDragging) return;
+      if (!pointerDown) return;
 
       const deltaY = e.clientY - lastY;
+      const deltaX = e.clientX - lastX;
       lastY = e.clientY;
-      dragDistance += Math.abs(deltaY) + Math.abs(e.clientX - startX);
+      lastX = e.clientX;
 
-      const dragFactor = (deltaY / height) * 2.8;
-      targetProgress -= dragFactor;
-      targetProgressRef.current = targetProgress;
+      if (!isDragging) {
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 6) {
+          isDragging = true;
+        }
+      }
+
+      if (isDragging && currentItemsRef.current.length > 1) {
+        if (width < 720) {
+          // Mobile: vertical drag for 3D card slider, with horizontal swipe also supported
+          const isVerticalGesture = Math.abs(deltaY) >= Math.abs(deltaX);
+          const primaryDelta = isVerticalGesture ? deltaY : deltaX;
+          const basis = isVerticalGesture ? height : width;
+          const dragMultiplier = 3.6;
+          const dragFactor = (primaryDelta / basis) * dragMultiplier;
+          targetProgressRef.current -= dragFactor;
+        } else {
+          const dragMultiplier = 2.8;
+          const dragFactor = (deltaY / height) * dragMultiplier;
+          targetProgressRef.current -= dragFactor;
+        }
+      }
     };
 
     const handlePointerUp = (e: PointerEvent) => {
-      if (isCaseOpenRef.current || isReturningRef.current || !isDragging) return;
+      if (!pointerDown) return;
+      const wasDragging = isDragging;
+      pointerDown = false;
       isDragging = false;
 
-      targetProgress = Math.round(targetProgress);
-      targetProgressRef.current = targetProgress;
+      if (wasDragging) {
+        return;
+      }
 
-      // Raycast click detection on card click
-      if (dragDistance < 8) {
-        const rayMouse = new THREE.Vector2(
-          ((e.clientX - renderer.domElement.getBoundingClientRect().left) / width) * 2 - 1,
-          -((e.clientY - renderer.domElement.getBoundingClientRect().top) / height) * 2 + 1
-        );
+      // Pure click on card
+      const rect = renderer.domElement.getBoundingClientRect();
+      const rayMouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
 
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(rayMouse, camera);
-        const intersects = raycaster.intersectObjects(cards.map((c) => c.mesh));
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(rayMouse, camera);
+      const intersects = raycaster.intersectObjects(cardsRef.current.map((c) => c.mesh));
 
-        if (intersects.length > 0) {
-          const hit = intersects[0].object as unknown as { projectIndex: number };
-          const hitIdx = hit.projectIndex;
-          const currentWrapped = ((Math.round(currentProgress) % count) + count) % count;
+      if (intersects.length > 0) {
+        const hit = intersects[0].object as unknown as { projectIndex: number; cardIndex?: number };
+        const clickedProjectIdx = hit.projectIndex;
+        const currentActiveIdx = activeIndexRef.current;
 
-          if (hitIdx === currentWrapped) {
-            // Clicked active center card -> Trigger continuous spatial open
-            const p = filteredItems[hitIdx];
-            const activeMesh = intersects[0].object as THREE.Mesh;
-            openCase(p, activeMesh);
+        if (clickedProjectIdx === currentActiveIdx) {
+          // Active center card was clicked -> Open project with PageTransition!
+          const p = currentItemsRef.current[clickedProjectIdx];
+          if (p) {
+            const catSlug = p.categories?.slug || "web-design";
+            navigateTo(`/portfolio/${catSlug}/${p.slug}`);
+          }
+        } else {
+          // Adjacent card was clicked -> Bring it to center smoothly
+          if (typeof hit.cardIndex === "number") {
+            const total = cardsRef.current.length;
+            const current = currentProgressRef.current;
+            const activeCardIdx = ((Math.round(current) % total) + total) % total;
+            let cardDiff = hit.cardIndex - activeCardIdx;
+            while (cardDiff > total / 2) cardDiff -= total;
+            while (cardDiff < -total / 2) cardDiff += total;
+            targetProgressRef.current = current + cardDiff;
           } else {
-            // Clicked adjacent card -> Scroll to that card
-            let diff = hitIdx - currentWrapped;
-            if (diff > count / 2) diff -= count;
-            if (diff < -count / 2) diff += count;
-            targetProgress = Math.round(currentProgress + diff);
-            targetProgressRef.current = targetProgress;
-            if (audioEnabled) playHapticTick();
+            scrollToProject(clickedProjectIdx);
           }
         }
       }
     };
 
     const handleWheel = (e: WheelEvent) => {
-      if (isCaseOpenRef.current || isReturningRef.current) return; // Allow natural scrolling inside open case view
+      if (currentItemsRef.current.length <= 1) return;
       e.preventDefault();
-      const delta = e.deltaY * 0.0022;
-      targetProgress += delta;
-      targetProgressRef.current = targetProgress;
+      const delta = e.deltaY * 0.0028;
+      targetProgressRef.current += delta;
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isCaseOpenRef.current) {
-        if (e.key === "Escape") closeCase();
-        return;
-      }
-      if (isReturningRef.current) return;
+      if (currentItemsRef.current.length <= 1) return;
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-        targetProgress = Math.round(targetProgress + 1);
-        targetProgressRef.current = targetProgress;
-        if (audioEnabled) playHapticTick();
+        targetProgressRef.current += 1;
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-        targetProgress = Math.round(targetProgress - 1);
-        targetProgressRef.current = targetProgress;
-        if (audioEnabled) playHapticTick();
+        targetProgressRef.current -= 1;
       }
     };
 
@@ -743,6 +466,7 @@ export default function Portfolio3DShowcase({
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      camera.position.z = width < 720 ? Math.max(8.5, 8.5 * (0.62 / Math.max(camera.aspect, 0.4))) : 8.5;
     };
 
     window.addEventListener("resize", handleResize);
@@ -753,12 +477,7 @@ export default function Portfolio3DShowcase({
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
-      if (isCaseOpenRef.current || isReturningRef.current) {
-        renderer.render(scene, camera);
-        return;
-      }
-
-      targetProgress = targetProgressRef.current;
+      const targetProgress = targetProgressRef.current;
 
       // Smooth Physics Lerp
       currentProgress += (targetProgress - currentProgress) * 0.085;
@@ -771,57 +490,160 @@ export default function Portfolio3DShowcase({
       mouse.x += (mouse.targetX - mouse.x) * 0.08;
       mouse.y += (mouse.targetY - mouse.y) * 0.08;
 
-      // Camera slight tilt
       camera.position.x = mouse.x * 0.25;
       camera.position.y = mouse.y * 0.18;
       camera.lookAt(0, 0, 0);
 
-      // Check current active center index
-      const wrappedIndex = ((Math.round(currentProgress) % count) + count) % count;
-      if (wrappedIndex !== lastActiveIdx) {
-        lastActiveIdx = wrappedIndex;
-        activeIndexRef.current = wrappedIndex;
-        setActiveIndex(wrappedIndex);
-        if (audioEnabled) playHapticTick();
+      const count = currentItemsRef.current.length;
+      const total = cardsRef.current.length;
+      if (total > 0 && count > 0) {
+        const wrappedTotalIndex = ((Math.round(currentProgress) % total) + total) % total;
+        if (wrappedTotalIndex !== lastActiveTotalIdx) {
+          lastActiveTotalIdx = wrappedTotalIndex;
+          setActiveReelIndex(wrappedTotalIndex);
+          const wrappedProjectIndex = wrappedTotalIndex % count;
+          activeIndexRef.current = wrappedProjectIndex;
+          setActiveIndex(wrappedProjectIndex);
+        }
       }
 
-      // Position each card along the 3D Vertical-Diagonal Track
-      cards.forEach((card, i) => {
-        const total = cards.length;
-        let diff = i - (currentProgress % total);
+      // Position each card along the 3D Track
+      if (total > 0) {
+        cardsRef.current.forEach((card, i) => {
+          let diff = i - (currentProgress % total);
 
-        while (diff > total / 2) diff -= total;
-        while (diff < -total / 2) diff += total;
+          while (diff > total / 2) diff -= total;
+          while (diff < -total / 2) diff += total;
 
-        const absDiff = Math.abs(diff);
+          const absDiff = Math.abs(diff);
 
-        // Vertical-Diagonal trajectory
-        const y = -diff * 3.3;
-        const x = -diff * 1.5;
-        const z = -Math.pow(absDiff, 1.25) * 2.8;
+          const isMobileView = width < 720;
+          const y = -diff * (isMobileView ? 2.5 : 3.3) + (isMobileView ? 0.65 : 0);
+          const x = -diff * (isMobileView ? 0.35 : 1.5);
+          const z = -Math.pow(absDiff, 1.25) * (isMobileView ? 2.2 : 2.8);
 
-        card.mesh.position.set(x, y, z);
+          card.mesh.position.set(x, y, z);
 
-        // 3D Isometric Rotations (X, Y, Z angled stack)
-        const rotX = diff * 0.42 + mouse.y * 0.1;
-        const rotY = -diff * 0.35 + mouse.x * 0.12;
-        const rotZ = diff * 0.1;
+          const rotX = diff * 0.42 + mouse.y * 0.1;
+          const rotY = -diff * (isMobileView ? 0.14 : 0.35) + mouse.x * 0.12;
+          const rotZ = diff * (isMobileView ? 0.04 : 0.1);
 
-        card.mesh.rotation.set(rotX, rotY, rotZ);
+          card.mesh.rotation.set(rotX, rotY, rotZ);
 
-        // Scale & Opacity falloff for depth
-        const scale = Math.max(0.65, 1.05 - absDiff * 0.18);
-        card.mesh.scale.set(scale, scale, 1);
+          const scale = Math.max(0.65, 1.05 - absDiff * 0.18);
+          card.mesh.scale.set(scale, scale, 1);
 
-        const opacity = THREE.MathUtils.clamp(1.05 - absDiff * 0.42, 0.15, 1.0);
-        card.material.opacity = opacity;
+          const opacity = THREE.MathUtils.clamp(1.05 - absDiff * 0.42, 0.15, 1.0);
+          card.material.opacity = opacity;
 
-        // Update wave & liquid shader uniforms
-        if (card.material.userData.shader) {
-          card.material.userData.shader.uniforms.uTime.value = elapsedTime;
-          card.material.userData.shader.uniforms.uVelocity.value = velocity;
+          if (card.material.userData.shader) {
+            card.material.userData.shader.uniforms.uTime.value = elapsedTime;
+            card.material.userData.shader.uniforms.uVelocity.value = velocity;
+          }
+        });
+
+        // 2. Position each Right-Column 2D Title item continuously in real-time
+        const titleEls = titleItemsRef.current;
+        for (let i = 0; i < total; i++) {
+          const el = titleEls[i];
+          if (!el) continue;
+
+          let diff = i - (currentProgress % total);
+          while (diff > total / 2) diff -= total;
+          while (diff < -total / 2) diff += total;
+
+          const absDiff = Math.abs(diff);
+
+          // Continuous smooth opacity curve:
+          // Active (<= 0.4): 1.0
+          // 0.4 -> 1.0: 1.0 -> 0.45
+          // 1.0 -> 2.0: 0.45 -> 0.15
+          // 2.0 -> 2.6: 0.15 -> 0.0
+          // > 2.6: 0.0 (hidden)
+          let opacity = 0;
+          if (absDiff <= 0.4) {
+            opacity = 1;
+          } else if (absDiff <= 1.0) {
+            const t = (absDiff - 0.4) / 0.6;
+            opacity = 1.0 - t * 0.55;
+          } else if (absDiff <= 2.0) {
+            const t = (absDiff - 1.0) / 1.0;
+            opacity = 0.45 - t * 0.30;
+          } else if (absDiff <= 2.6) {
+            const t = (absDiff - 2.0) / 0.6;
+            opacity = Math.max(0, 0.15 - t * 0.15);
+          } else {
+            opacity = 0;
+          }
+
+          const scale = Math.max(0.78, 1.0 - absDiff * 0.075);
+          const spacing = width < 1024 ? 95 : 135;
+          const y = diff * spacing;
+
+          el.style.transform = `translateY(calc(-50% + ${y.toFixed(2)}px)) scale(${scale.toFixed(3)})`;
+          el.style.opacity = opacity.toFixed(3);
+          el.style.visibility = opacity <= 0.005 ? "hidden" : "visible";
+          el.style.pointerEvents = absDiff <= 2.2 ? "auto" : "none";
+          el.style.zIndex = absDiff < 0.5 ? "5" : `${Math.max(1, 4 - Math.floor(absDiff))}`;
+
+          if (absDiff < 0.5) {
+            el.classList.add("is-active");
+          } else {
+            el.classList.remove("is-active");
+          }
         }
-      });
+
+        // 3. Position each Mobile Horizontal Title item continuously in real-time (< 720px)
+        const isMobile = width < 720;
+        if (isMobile) {
+          const mobileEls = mobileTitleItemsRef.current;
+          // Spacing: exactly sized so 3 titles (left, center, right) fit neatly across screen
+          const spacingX = Math.min(Math.max(width * 0.38, 140), 200);
+          for (let i = 0; i < total; i++) {
+            const el = mobileEls[i];
+            if (!el) continue;
+
+            let diff = i - (currentProgress % total);
+            while (diff > total / 2) diff -= total;
+            while (diff < -total / 2) diff += total;
+
+            const absDiff = Math.abs(diff);
+
+            // Exactly 3 Titles visible curve:
+            // Center (<= 0.3): full opacity 1.0
+            // 0.3 -> 1.0: drops from 1.0 to 0.38 (dimmed side titles)
+            // 1.0 -> 1.35: drops from 0.38 to 0 (fades out completely off the sides)
+            // > 1.35: 0.0 (hidden)
+            let opacity = 0;
+            if (absDiff <= 0.3) {
+              opacity = 1;
+            } else if (absDiff <= 1.0) {
+              const t = (absDiff - 0.3) / 0.7;
+              opacity = 1.0 - t * 0.62;
+            } else if (absDiff <= 1.35) {
+              const t = (absDiff - 1.0) / 0.35;
+              opacity = Math.max(0, 0.38 - t * 0.38);
+            } else {
+              opacity = 0;
+            }
+
+            const scale = Math.max(0.72, 1.0 - absDiff * 0.28);
+            const x = diff * spacingX;
+
+            el.style.transform = `translate(calc(-50% + ${x.toFixed(2)}px), -50%) scale(${scale.toFixed(3)})`;
+            el.style.opacity = opacity.toFixed(3);
+            el.style.visibility = opacity <= 0.005 ? "hidden" : "visible";
+            el.style.pointerEvents = absDiff <= 1.1 ? "auto" : "none";
+            el.style.zIndex = absDiff < 0.5 ? "10" : "5";
+
+            if (absDiff < 0.5) {
+              el.classList.add("is-active");
+            } else {
+              el.classList.remove("is-active");
+            }
+          }
+        }
+      }
 
       renderer.render(scene, camera);
     };
@@ -830,7 +652,7 @@ export default function Portfolio3DShowcase({
 
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener("popstate", handlePopState);
+      buildCardsRef.current = null;
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
@@ -843,12 +665,22 @@ export default function Portfolio3DShowcase({
       }
 
       geometry.dispose();
-      cards.forEach((c) => {
+      cardsRef.current.forEach((c) => {
         c.material.dispose();
       });
+      textureCacheRef.current.forEach((tex) => tex.dispose());
+      textureCacheRef.current.clear();
       renderer.dispose();
     };
-  }, [filteredItems, activeCategory, audioEnabled]);
+  }, [navigateTo, scrollToProject]);
+
+  // 2. WHEN FILTERED ITEMS CHANGE: Rebuild cards in existing Three.js scene instantly!
+  useEffect(() => {
+    currentItemsRef.current = filteredItems;
+    if (buildCardsRef.current) {
+      buildCardsRef.current(filteredItems);
+    }
+  }, [filteredItems]);
 
   if (filteredItems.length === 0) {
     return (
@@ -856,7 +688,7 @@ export default function Portfolio3DShowcase({
         <p>Ushbu kategoriyada loyihalar topilmadi</p>
         <button
           onClick={() => handleCategoryClick()}
-          className="huyml-showcase__cat-chip is-active"
+          className="huyml-showcase__cat-item is-active"
           style={{ marginTop: "1rem" }}
         >
           All Work
@@ -865,87 +697,56 @@ export default function Portfolio3DShowcase({
     );
   }
 
-  const projectCategorySlug = activeProject?.categories?.slug || "web-design";
-  const projectSlug = activeProject?.slug || "";
-  const projectUrl = `/portfolio/${projectCategorySlug}/${projectSlug}`;
-
-  const handleViewCaseClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (isCaseOpenRef.current || isReturningRef.current) return;
-    const count = filteredItems.length;
-    const currentWrapped = ((Math.round(currentProgressRef.current) % count) + count) % count;
-    const activeCard = cardsRef.current.find((c) => c.originalIndex === currentWrapped);
-    const item = filteredItems[currentWrapped];
-    if (activeCard && item && openCaseRef.current) {
-      openCaseRef.current(item, activeCard.mesh);
-    }
-  };
-
-  const handleCloseCase = () => {
-    if (closeCaseRef.current) {
-      closeCaseRef.current();
-    }
-  };
-
-  const caseCategoryTitle = activeCaseItem?.categories?.title || "Product Design";
-
   return (
-    <div
-      ref={showcaseRef}
-      className={`huyml-showcase ${isCaseOpen ? "is-case-open" : ""}`}
-    >
+    <div ref={showcaseRef} className="huyml-showcase">
       {/* Background 3D Canvas Layer */}
       <div ref={canvasWrapperRef} className="huyml-showcase__canvas-wrapper" />
       <div className="huyml-showcase__fade-top" />
       <div className="huyml-showcase__fade-bottom" />
 
-      {/* Top Bar (Categories & Sound) */}
-      <div ref={topBarRef} className="huyml-showcase__top-bar">
-        <div className="huyml-showcase__category-select">
+      {/* =====================================================================
+          VERTICALLY CENTERED CATEGORY NAVIGATION (LEFT SIDE)
+          ===================================================================== */}
+      <nav className="huyml-showcase__category-nav">
+        <div className="huyml-showcase__category-list">
           <button
             onClick={() => handleCategoryClick()}
-            className={`huyml-showcase__cat-chip ${
-              !activeCategory ? "is-active" : ""
+            className={`huyml-showcase__cat-item ${
+              !selectedCategory ? "is-active" : ""
             }`}
           >
-            All ({items.length})
+            <span className="huyml-showcase__cat-name">Barchasi</span>
+            <span className="huyml-showcase__cat-count">{items.length}</span>
           </button>
 
           {categories.map((cat) => {
             const countInCat = items.filter(
               (i) => i.categories?.slug === cat.slug
             ).length;
-            const isActive = activeCategory === cat.slug;
+            const isActive = selectedCategory === cat.slug;
 
             return (
               <button
                 key={cat.id}
                 onClick={() => handleCategoryClick(cat.slug)}
-                className={`huyml-showcase__cat-chip ${
+                className={`huyml-showcase__cat-item ${
                   isActive ? "is-active" : ""
                 }`}
               >
-                {cat.title} ({countInCat})
+                <span className="huyml-showcase__cat-name">{cat.title}</span>
+                <span className="huyml-showcase__cat-count">{countInCat}</span>
               </button>
             );
           })}
         </div>
-
-        <button
-          onClick={() => setAudioEnabled(!audioEnabled)}
-          className="huyml-showcase__audio-btn"
-          title="Audio Haptics"
-        >
-          <span>{audioEnabled ? "Sound ON" : "Sound OFF"}</span>
-        </button>
-      </div>
+      </nav>
 
       {/* 3-Column Editorial Grid Container */}
       <div className="huyml-showcase__container">
         {/* =================================================================
-            1. LEFT COLUMN: CASE METADATA & BOTTOM COUNTER
+            1. LEFT COLUMN: PROJECT METADATA (Top Left)
             ================================================================= */}
-        <div ref={leftColRef} className="huyml-showcase__left-col">
+        <div className="huyml-showcase__left-col">
           {activeProject && (
             <div className="huyml-showcase__meta-block">
               <div className="huyml-showcase__meta-item">
@@ -964,65 +765,66 @@ export default function Portfolio3DShowcase({
                 <span className="huyml-showcase__meta-label">Year</span>
                 <p className="huyml-showcase__meta-value">{activeProject.year}</p>
               </div>
-
-              <div className="huyml-showcase__meta-item">
-                <span className="huyml-showcase__meta-label">Recognition</span>
-                <p className="huyml-showcase__meta-value">
-                  {activeProject.is_featured
-                    ? "Featured Project\nAwwwards Nominee\nCSSDA Website of the Day"
-                    : "Digital Experience\nCreative Interface"}
-                </p>
-              </div>
             </div>
           )}
-
-          {/* Large Bottom Left Counter */}
-          <div className="huyml-showcase__bottom-counter">
-            <span className="huyml-showcase__counter-label">Selected work</span>
-            <div className="huyml-showcase__counter-number">
-              {String(activeIndex + 1).padStart(2, "0")}
-            </div>
-          </div>
         </div>
 
         {/* =================================================================
-            2. CENTER COLUMN: 3D CARD ACTION (VIEW CASE)
+            2. CENTER COLUMN: Spacer (3D Canvas in center is unobstructed)
             ================================================================= */}
-        <div className="huyml-showcase__center-col">
-          <div ref={centerActionRef} className="huyml-showcase__center-action">
-            <button
-              onClick={handleViewCaseClick}
-              className="huyml-showcase__view-case-btn"
-            >
-              <span>View Case Study</span>
-              <span>↗</span>
-            </button>
-          </div>
-        </div>
+        <div className="huyml-showcase__center-col" />
 
         {/* =================================================================
             3. RIGHT COLUMN: VERTICALLY SCROLLING REEL OF PROJECT TITLES
             ================================================================= */}
-        <div ref={rightColRef} className="huyml-showcase__right-col">
-          <div
-            className="huyml-showcase__titles-track"
-            style={{
-              transform: `translateY(calc(-${activeIndex * 120}px - 60px))`,
-            }}
-          >
-            {filteredItems.map((item, idx) => {
-              const isActive = idx === activeIndex;
+        <div className="huyml-showcase__right-col">
+          <div className="huyml-showcase__titles-reel">
+            {reelItems.map((item, i) => {
+              let diff = i;
+              if (totalReel > 1) {
+                while (diff > totalReel / 2) diff -= totalReel;
+                while (diff < -totalReel / 2) diff += totalReel;
+              }
+              const absDiff = Math.abs(diff);
+              const itemCatSlug = item.categories?.slug || "web-design";
+              const itemUrl = `/portfolio/${itemCatSlug}/${item.slug}`;
+
+              let initialOpacity = 0;
+              if (absDiff <= 0.4) initialOpacity = 1;
+              else if (absDiff <= 1.0) initialOpacity = 0.45;
+              else if (absDiff <= 2.0) initialOpacity = 0.15;
+              const initialScale = Math.max(0.78, 1.0 - absDiff * 0.075);
+              const initialY = diff * 135;
+
               return (
                 <div
-                  key={item.id}
-                  onClick={() => scrollToProject(idx)}
-                  className={`huyml-showcase__title-item ${isActive ? "is-active" : ""}`}
-                >
-                  <div className="huyml-showcase__title-category">
-                    <span className="huyml-showcase__title-category-dot" />
-                    <span>{item.categories?.title || "Digital Case"}</span>
-                  </div>
+                  key={item.reelKey}
+                  ref={(el) => {
+                    titleItemsRef.current[i] = el;
+                  }}
+                  onClick={() => {
+                    const current = currentProgressRef.current;
+                    let curDiff = i - (current % totalReel);
+                    while (curDiff > totalReel / 2) curDiff -= totalReel;
+                    while (curDiff < -totalReel / 2) curDiff += totalReel;
 
+                    if (Math.abs(curDiff) < 0.5) {
+                      navigateTo(itemUrl);
+                    } else {
+                      targetProgressRef.current = current + curDiff;
+                    }
+                  }}
+                  className={`huyml-showcase__title-item ${
+                    absDiff < 0.5 ? "is-active" : ""
+                  }`}
+                  style={{
+                    transform: `translateY(calc(-50% + ${initialY.toFixed(2)}px)) scale(${initialScale.toFixed(3)})`,
+                    opacity: initialOpacity,
+                    pointerEvents: absDiff <= 2.2 ? "auto" : "none",
+                    visibility: initialOpacity === 0 ? "hidden" : "visible",
+                    zIndex: absDiff < 0.5 ? 5 : Math.max(1, 4 - Math.floor(absDiff)),
+                  }}
+                >
                   <h2 className="huyml-showcase__title-name">{item.title}</h2>
 
                   {item.excerpt && (
@@ -1033,123 +835,74 @@ export default function Portfolio3DShowcase({
             })}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Center Scroll Hint */}
-      <div ref={scrollHintRef} className="huyml-showcase__scroll-hint">
-        Scroll / Drag to explore
-      </div>
+        {/* =================================================================
+            4. MOBILE HORIZONTAL TITLES REEL (< 720px)
+            ================================================================= */}
+        <div className="huyml-showcase__mobile-reel" aria-label="Loyiha nomlari">
+          {reelItems.map((item, i) => {
+            const cur = currentProgressRef.current;
+            let diff = i - (cur % totalReel);
+            if (totalReel > 0) {
+              while (diff > totalReel / 2) diff -= totalReel;
+              while (diff < -totalReel / 2) diff += totalReel;
+            }
+            const absDiff = Math.abs(diff);
 
-      {/* Bottom Right Total Selected Count Badge */}
-      <div ref={bottomRightRef} className="huyml-showcase__bottom-right">
-        <span className="huyml-showcase__total-badge">
-          {String(filteredItems.length).padStart(2, "0")} Selected ↗
-        </span>
-      </div>
+            let initialOpacity = 0;
+            if (absDiff <= 0.3) {
+              initialOpacity = 1;
+            } else if (absDiff <= 1.0) {
+              const t = (absDiff - 0.3) / 0.7;
+              initialOpacity = 1.0 - t * 0.62;
+            } else if (absDiff <= 1.35) {
+              const t = (absDiff - 1.0) / 0.35;
+              initialOpacity = Math.max(0, 0.38 - t * 0.38);
+            }
+            const initialScale = Math.max(0.72, 1.0 - absDiff * 0.28);
+            const initialX = diff * 150;
 
-      {/* =====================================================================
-          CONTINUOUS SPATIAL CASE STUDY LAYER (NO UNMOUNT / ZERO RELOAD)
-          ===================================================================== */}
-      {isCaseOpen && activeCaseItem && (
-        <div className="spatial-case">
-          {/* 1. Transparent Hero allowing 3D full-screen card to shine through */}
-          <section className="spatial-case__hero">
-            <div className="spatial-case__gradient" />
+            const itemCatSlug = item.categories?.slug || "web-design";
+            const itemUrl = `/portfolio/${itemCatSlug}/${item.slug}`;
 
-            <div ref={spatialTopRef} className="spatial-case__top">
-              <button onClick={handleCloseCase} className="spatial-case__back-btn">
-                <span>←</span>
-                <span>All Projects</span>
-              </button>
+            return (
+              <div
+                key={`mobile-reel-${item.reelKey || item.id}-${i}`}
+                ref={(el) => {
+                  mobileTitleItemsRef.current[i] = el;
+                }}
+                onClick={() => {
+                  const current = currentProgressRef.current;
+                  let curDiff = i - (current % totalReel);
+                  while (curDiff > totalReel / 2) curDiff -= totalReel;
+                  while (curDiff < -totalReel / 2) curDiff += totalReel;
 
-              <span className="spatial-case__year-badge">{activeCaseItem.year}</span>
-            </div>
-
-            <div ref={spatialHeroRef} className="spatial-case__hero-bottom">
-              <div className="spatial-case__category">{caseCategoryTitle}</div>
-              <h1 className="spatial-case__title">{activeCaseItem.title}</h1>
-              {activeCaseItem.excerpt && (
-                <p className="spatial-case__excerpt">{activeCaseItem.excerpt}</p>
-              )}
-            </div>
-          </section>
-
-          {/* 2. Solid Editorial Content Body */}
-          <div className="spatial-case__body">
-            <div className="spatial-case__inner">
-              {/* Metadata Grid */}
-              <div className="spatial-case__meta-grid">
-                <div className="spatial-case__meta-item">
-                  <span className="spatial-case__meta-label">Client</span>
-                  <p className="spatial-case__meta-value">{activeCaseItem.title}</p>
-                </div>
-
-                <div className="spatial-case__meta-item">
-                  <span className="spatial-case__meta-label">Service</span>
-                  <p className="spatial-case__meta-value">{caseCategoryTitle}</p>
-                </div>
-
-                <div className="spatial-case__meta-item">
-                  <span className="spatial-case__meta-label">Year</span>
-                  <p className="spatial-case__meta-value">{activeCaseItem.year}</p>
-                </div>
-
-                <div className="spatial-case__meta-item">
-                  <span className="spatial-case__meta-label">Recognition</span>
-                  <p className="spatial-case__meta-value">
-                    {activeCaseItem.is_featured
-                      ? "Featured Project\nAwwwards Nominee"
-                      : "Digital Experience\nCreative Interface"}
-                  </p>
-                </div>
+                  if (Math.abs(curDiff) < 0.5) {
+                    navigateTo(itemUrl);
+                  } else {
+                    targetProgressRef.current = current + curDiff;
+                  }
+                }}
+                className={`huyml-showcase__mobile-title-item ${
+                  absDiff < 0.5 ? "is-active" : ""
+                }`}
+                style={{
+                  transform: `translate(calc(-50% + ${initialX.toFixed(2)}px), -50%) scale(${initialScale.toFixed(3)})`,
+                  opacity: initialOpacity,
+                  pointerEvents: absDiff <= 1.1 ? "auto" : "none",
+                  visibility: initialOpacity <= 0.005 ? "hidden" : "visible",
+                  zIndex: absDiff < 0.5 ? 10 : 5,
+                }}
+              >
+                <h2 className="huyml-showcase__mobile-title-name">{item.title}</h2>
+                {item.excerpt && (
+                  <p className="huyml-showcase__mobile-title-excerpt">{item.excerpt}</p>
+                )}
               </div>
-
-              {/* Case Sections */}
-              {activeCaseItem.sections && activeCaseItem.sections.length > 0 && (
-                <section className="spatial-case__sections">
-                  {activeCaseItem.sections.map((section: CaseSection, i: number) => (
-                    <div key={section.id || i} className="spatial-case__section-item">
-                      <h2 className="spatial-case__section-title">{section.title}</h2>
-                      <p className="spatial-case__section-content">{section.content}</p>
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              {/* Visual Gallery Grid */}
-              {activeCaseItem.gallery && activeCaseItem.gallery.length > 0 && (
-                <section className="spatial-case__gallery-section">
-                  <h2 className="spatial-case__gallery-heading">Visual Showcase</h2>
-                  <div className="spatial-case__gallery-grid">
-                    {activeCaseItem.gallery.map((media: GalleryMedia, i: number) => (
-                      <div key={media.id || i} className="spatial-case__gallery-item">
-                        {media.type === "video" ? (
-                          <video src={media.url} controls width="100%" />
-                        ) : (
-                          <Image
-                            src={media.url}
-                            alt={`${activeCaseItem.title} gallery ${i + 1}`}
-                            width={1200}
-                            height={750}
-                            style={{ width: "100%", height: "auto" }}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Bottom Footer Back Button */}
-              <div className="spatial-case__footer">
-                <button onClick={handleCloseCase} className="spatial-case__footer-btn">
-                  <span>← Back to All Projects</span>
-                </button>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

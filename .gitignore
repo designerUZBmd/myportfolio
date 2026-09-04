@@ -6,3 +6,5 @@ node_modules
 .env.development
 .vercel
 .env*
+*.tsbuildinfo
+public/video/
