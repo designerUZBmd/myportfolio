@@ -331,6 +331,8 @@ export default function Portfolio3DShowcase({
     let startY = 0;
     let lastY = 0;
     let lastX = 0;
+    let velocityTracker = 0;
+    let lastMoveTime = 0;
 
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
@@ -350,6 +352,8 @@ export default function Portfolio3DShowcase({
       startY = e.clientY;
       lastY = e.clientY;
       lastX = e.clientX;
+      velocityTracker = 0;
+      lastMoveTime = performance.now();
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -363,21 +367,28 @@ export default function Portfolio3DShowcase({
       lastY = e.clientY;
       lastX = e.clientX;
 
+      const now = performance.now();
+      const dt = Math.max(8, now - lastMoveTime);
+      lastMoveTime = now;
+
       if (!isDragging) {
-        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 6) {
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 5) {
           isDragging = true;
         }
       }
 
       if (isDragging && currentItemsRef.current.length > 1) {
         if (width < 720) {
-          // Mobile: vertical drag for 3D card slider, with horizontal swipe also supported
+          // Mobile: responsive touch sensitivity + flick velocity tracking
           const isVerticalGesture = Math.abs(deltaY) >= Math.abs(deltaX);
           const primaryDelta = isVerticalGesture ? deltaY : deltaX;
           const basis = isVerticalGesture ? height : width;
-          const dragMultiplier = 3.6;
+          const dragMultiplier = 8.6;
           const dragFactor = (primaryDelta / basis) * dragMultiplier;
           targetProgressRef.current -= dragFactor;
+
+          const instantVel = -dragFactor / (dt / 1000);
+          velocityTracker = velocityTracker * 0.4 + instantVel * 0.6;
         } else {
           const dragMultiplier = 2.8;
           const dragFactor = (deltaY / height) * dragMultiplier;
@@ -393,6 +404,13 @@ export default function Portfolio3DShowcase({
       isDragging = false;
 
       if (wasDragging) {
+        if (width < 720) {
+          // Apply silky flick momentum on mobile release
+          const clampedVel = Math.max(-3.5, Math.min(3.5, velocityTracker));
+          if (Math.abs(clampedVel) > 0.6) {
+            targetProgressRef.current += clampedVel * 0.18;
+          }
+        }
         return;
       }
 
@@ -518,7 +536,7 @@ export default function Portfolio3DShowcase({
           const absDiff = Math.abs(diff);
 
           const isMobileView = width < 720;
-          const y = -diff * (isMobileView ? 2.5 : 3.3) + (isMobileView ? 0.65 : 0);
+          const y = -diff * (isMobileView ? 2.5 : 3.3) + (isMobileView ? 0.30 : 0);
           const x = -diff * (isMobileView ? 0.35 : 1.5);
           const z = -Math.pow(absDiff, 1.25) * (isMobileView ? 2.2 : 2.8);
 
