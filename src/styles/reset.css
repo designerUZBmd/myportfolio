@@ -6,6 +6,7 @@
   text-decoration: none;
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+  -webkit-tap-highlight-color: transparent;
 }
 
 *::-webkit-scrollbar {
@@ -21,6 +22,7 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html::-webkit-scrollbar,
@@ -35,5 +37,20 @@ body {
   background-color: #ffffff;
   min-height: 100vh;
   position: relative;
+}
+
+/* Prevent accidental text selection & tap flash on interactive elements */
+a, button, [role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove default blue outline on touch tap, keep for keyboard navigation */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible) {
+  outline: none;
 }
 

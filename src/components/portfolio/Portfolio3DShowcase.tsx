@@ -44,6 +44,8 @@ export default function Portfolio3DShowcase({
   activeCategory,
 }: Portfolio3DShowcaseProps) {
   const { navigateTo } = useNavigation();
+  const navigateToRef = useRef(navigateTo);
+  navigateToRef.current = navigateTo;
 
   const showcaseRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -130,6 +132,9 @@ export default function Portfolio3DShowcase({
     },
     []
   );
+
+  const scrollToProjectRef = useRef(scrollToProject);
+  scrollToProjectRef.current = scrollToProject;
 
   // 1. SETUP THREE.JS ENGINE ONCE (Renderer & Canvas never destroyed on filter)
   useEffect(() => {
@@ -435,7 +440,7 @@ export default function Portfolio3DShowcase({
           const p = currentItemsRef.current[clickedProjectIdx];
           if (p) {
             const catSlug = p.categories?.slug || "web-design";
-            navigateTo(`/portfolio/${catSlug}/${p.slug}`);
+            navigateToRef.current(`/portfolio/${catSlug}/${p.slug}`);
           }
         } else {
           // Adjacent card was clicked -> Bring it to center smoothly
@@ -448,7 +453,7 @@ export default function Portfolio3DShowcase({
             while (cardDiff < -total / 2) cardDiff += total;
             targetProgressRef.current = current + cardDiff;
           } else {
-            scrollToProject(clickedProjectIdx);
+            scrollToProjectRef.current(clickedProjectIdx);
           }
         }
       }
@@ -702,15 +707,17 @@ export default function Portfolio3DShowcase({
       textureCacheRef.current.clear();
       renderer.dispose();
     };
-  }, [navigateTo, scrollToProject]);
+  }, []);
 
   // 2. WHEN FILTERED ITEMS CHANGE: Rebuild cards in existing Three.js scene instantly!
+  const prevCategoryRef = useRef(selectedCategory);
   useEffect(() => {
     currentItemsRef.current = filteredItems;
-    if (buildCardsRef.current) {
+    if (buildCardsRef.current && prevCategoryRef.current !== selectedCategory) {
+      prevCategoryRef.current = selectedCategory;
       buildCardsRef.current(filteredItems);
     }
-  }, [filteredItems]);
+  }, [filteredItems, selectedCategory]);
 
   if (filteredItems.length === 0) {
     return (
