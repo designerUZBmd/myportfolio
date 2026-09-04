@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRevealer } from "@/hooks/useRevealer";
 import Portfolio3DShowcase, {
   Category,
@@ -16,6 +17,22 @@ export default function PortfolioClient({
   activeCategory?: string;
 }) {
   useRevealer();
+
+  useEffect(() => {
+    const prevBg = document.body.style.backgroundColor;
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.backgroundColor = "#ededed";
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.backgroundColor = prevBg;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, []);
 
   return (
     <>

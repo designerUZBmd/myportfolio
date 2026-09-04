@@ -488,6 +488,14 @@ export default function Portfolio3DShowcase({
     };
 
     window.addEventListener("resize", handleResize);
+    const visualViewport = typeof window !== "undefined" ? window.visualViewport : null;
+    if (visualViewport) {
+      visualViewport.addEventListener("resize", handleResize);
+    }
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(container);
 
     const clock = new THREE.Clock();
     let animId: number;
@@ -677,6 +685,10 @@ export default function Portfolio3DShowcase({
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("resize", handleResize);
+      if (visualViewport) {
+        visualViewport.removeEventListener("resize", handleResize);
+      }
+      resizeObserver.disconnect();
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

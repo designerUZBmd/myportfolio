@@ -3,11 +3,17 @@
    ------------------------------------------------------------------------- */
 
 .huyml-showcase {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background-color: #ededed;
   color: #111111;
   user-select: none;
