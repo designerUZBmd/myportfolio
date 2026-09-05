@@ -128,8 +128,8 @@ export default function ProjectPreviewWebGL({
       return { planeWidth, planeHeight, segments };
     };
 
-    let { planeWidth, planeHeight, segments } = getMeshDimensions();
-    let geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, segments, segments);
+    const { planeWidth, planeHeight, segments } = getMeshDimensions();
+    const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, segments, segments);
 
     const material = new THREE.ShaderMaterial({
       vertexShader: vertex,

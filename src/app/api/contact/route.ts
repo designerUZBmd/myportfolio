@@ -13,14 +13,36 @@ export async function POST(req: Request) {
       );
     }
 
+    const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
+    const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+
+    if (!botToken || !chatId) {
+      console.error("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is missing");
+      return NextResponse.json(
+        { error: "Telegram service is not configured" },
+        { status: 500 }
+      );
+    }
+
+    const escapeHtml = (text: string) =>
+      text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const formattedMessage =
+      `📬 <b>Yangi xabar (Portfolio)</b>\n\n` +
+      `👤 <b>Ism:</b> ${escapeHtml(name)}\n` +
+      `📞 <b>Aloqa:</b> ${escapeHtml(contact)}\n` +
+      `🎯 <b>Xizmat:</b> ${escapeHtml(service)}\n` +
+      `💬 <b>Xabar:</b>\n${escapeHtml(message)}`;
+
     const tgRes = await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: Number(process.env.TELEGRAM_CHAT_ID),
-          text: `New inquiry\nName: ${name}\nContact: ${contact}\nService: ${service}\nMessage: ${message}`,
+          chat_id: chatId,
+          text: formattedMessage,
+          parse_mode: "HTML",
         }),
       }
     );
@@ -28,6 +50,7 @@ export async function POST(req: Request) {
     const tgData = await tgRes.json();
 
     if (!tgRes.ok) {
+      console.error("Telegram error:", tgData);
       return NextResponse.json(
         { error: "Telegram error", tgData },
         { status: 500 }

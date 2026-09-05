@@ -9,8 +9,8 @@ export async function middleware(req: NextRequest) {
   });
 
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwuelpuepfmptrekvejc.supabase.co";
-  const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy";
+  const supabaseUrl = rawUrl.trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
+  const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim() || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy";
 
   const supabase = createServerClient(
     supabaseUrl,

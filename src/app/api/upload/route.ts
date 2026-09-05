@@ -3,6 +3,18 @@ import cloudinary from "@/lib/cloudinary";
 import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 export async function POST(request: Request) {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    console.error("Cloudinary credentials are missing");
+    return NextResponse.json(
+      { message: "Cloudinary configuration is missing on server" },
+      { status: 500 }
+    );
+  }
+
   const formData = await request.formData();
   const file = formData.get("file") as File;
 

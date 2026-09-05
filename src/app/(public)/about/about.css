@@ -1,0 +1,341 @@
+/* ==========================================================================
+   ABOUT PAGE — CINEMATIC FILM CREDITS (PURE OPACITY CHAR SCRUB)
+   Ultra-smooth, slower scroll with generous reading time for every sentence
+   ========================================================================== */
+
+.story-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5fcff;
+  color: #000000;
+  position: relative;
+  overflow-x: hidden;
+  font-family: var(--font-body), "HelveticaNeue", -apple-system, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   1. CINEMATIC CREDITS STAGE
+   -------------------------------------------------------------------------- */
+.credits-stage {
+  width: 100%;
+  height: 100dvh;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #96dfff 0%, #c4eeff 40%, #f5fcff 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.credits-viewport {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+}
+
+/* Continuous text stream rolling upward like movie end credits */
+.credits-stream {
+  width: 100%;
+  max-width: 980px;
+  text-align: center;
+  position: relative;
+  will-change: transform;
+  padding-top: calc(50vh - 80px);
+  padding-bottom: 70vh;
+}
+
+/* --------------------------------------------------------------------------
+   2. TYPOGRAPHY & CHUNKS (ONE UNIFIED STREAM, NATURAL SPACING)
+   -------------------------------------------------------------------------- */
+.credits-chunk {
+  display: block;
+  width: 100%;
+  margin: 0 auto 24vh auto;
+  font-size: clamp(1.8rem, 3.2vw, 3.4rem);
+  line-height: 1.62;
+  letter-spacing: -0.026em;
+  font-weight: 500;
+  color: #000000;
+  text-align: center;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+/* Birinchi va ikkinchi gap orasidagi bo'shliqni qisqartirish */
+#chunk-0.credits-chunk {
+  margin-bottom: 12vh;
+}
+
+.credits-chunk:last-child {
+  margin-bottom: 0;
+}
+
+.credits-chunk .word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.credits-chunk .char {
+  display: inline-block;
+  color: #000000;
+  will-change: opacity, transform;
+}
+
+.credits-chunk .char-bold,
+.credits-chunk .word-bold {
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   3. INLINE MEDIA PILLS (Embedded organically inside sentences)
+   -------------------------------------------------------------------------- */
+.credits-inline-media {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  height: 1.25em;
+  width: 1.85em;
+  margin: 0 0.4em;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #000000;
+  transform: translateY(-0.08em);
+  cursor: default;
+  will-change: opacity, transform;
+}
+
+.credits-inline-img {
+  object-fit: cover;
+}
+
+/* Cannes Lions Inline Badge */
+.credits-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.15em 0.75em;
+  font-size: 0.54em;
+  font-weight: 700;
+  vertical-align: middle;
+  background-color: #0d0f12;
+  color: #82d9ff;
+  border-radius: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin: 0 0.4em;
+  border: 1px solid rgba(130, 217, 255, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  transform: translateY(-0.1em);
+  cursor: default;
+  will-change: opacity, transform;
+}
+
+.credits-inline-star {
+  color: #82d9ff;
+  font-size: 1.1em;
+}
+
+/* --------------------------------------------------------------------------
+   4. MINIMAL CAREER LIST (TIMELINE SECTION)
+   Bottom padding accommodates fixed navbar bottom on mobile and desktop
+   -------------------------------------------------------------------------- */
+.story-bottom-section {
+  width: 100%;
+  background-color: #f5fcff;
+  padding: clamp(5rem, 8vw, 9rem) var(--page-gutter) calc(clamp(6rem, 10vw, 8rem) + var(--navbar-height, 4.5rem) + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+.story-timeline-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.story-timeline-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding-bottom: 1rem;
+}
+
+.story-timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.story-timeline-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 1fr;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  transition: background-color 0.2s ease, padding 0.2s ease;
+}
+
+.story-timeline-row:hover {
+  background-color: rgba(150, 223, 255, 0.12);
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
+  border-radius: 6px;
+}
+
+.story-timeline-year {
+  font-size: 0.92rem;
+  color: rgba(0, 0, 0, 0.45);
+  font-family: var(--font-mono, monospace);
+  letter-spacing: -0.01em;
+}
+
+.story-timeline-company {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: -0.015em;
+}
+
+.story-timeline-role {
+  font-size: 1.05rem;
+  color: rgba(0, 0, 0, 0.65);
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   5. ACTIONS (CV DOWNLOAD & CONTACT)
+   -------------------------------------------------------------------------- */
+.story-footer-actions {
+  margin-top: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.story-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #000000;
+  color: #ffffff;
+  padding: 0.95rem 1.8rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.story-cv-btn:hover {
+  background-color: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.story-cv-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.story-cv-btn:hover svg {
+  transform: translateY(2px);
+}
+
+.story-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.story-footer-link {
+  font-size: 0.92rem;
+  color: rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.story-footer-link:hover {
+  color: #000000;
+}
+
+/* --------------------------------------------------------------------------
+   6. RESPONSIVE BREAKPOINTS
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .credits-chunk {
+    font-size: clamp(1.5rem, 5vw, 2.3rem);
+    margin-bottom: 20vh;
+  }
+  
+  #chunk-0.credits-chunk {
+    margin-bottom: 10vh;
+  }
+  
+  .story-timeline-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    padding: 1.2rem 0;
+  }
+  
+  .story-timeline-role {
+    text-align: left;
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (max-width: 600px) {
+  .credits-stream {
+    padding-top: calc(50vh - 60px);
+    padding-bottom: 55vh;
+  }
+
+  .credits-chunk {
+    font-size: clamp(1.3rem, 5.5vw, 1.8rem);
+    line-height: 1.55;
+    margin-bottom: 16vh;
+  }
+
+  #chunk-0.credits-chunk {
+    margin-bottom: 8vh;
+  }
+
+  .story-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+
+  .story-cv-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .story-footer-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
