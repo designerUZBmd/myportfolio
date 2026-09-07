@@ -110,7 +110,7 @@
   overflow: hidden;
   position: relative;
   box-shadow: none;
-  border: 1px solid rgba(0, 0, 0, 0.22);
+  border: none;
   background-color: #000000;
   transform: translateY(-0.1em);
   cursor: default;
@@ -168,16 +168,12 @@
   pointer-events: auto;
   border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.16);
+  box-shadow: none;
+  border: none;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  transition: border-color 0.25s ease, transform 0.25s ease;
-}
-
-.floating-card:hover {
-  border-color: rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s ease;
 }
 
 .floating-card-inner {
@@ -360,94 +356,129 @@
     margin: 0 0.35em;
   }
 
-  .floating-card {
-    pointer-events: none;
-    opacity: 0.65;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  .credits-chunk {
+    margin-bottom: 26vh;
   }
 
+  #chunk-0.credits-chunk {
+    margin-bottom: 18vh;
+  }
+
+  .floating-card {
+    pointer-events: none;
+    opacity: 1;
+    box-shadow: none;
+    border: none;
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  /* Chunk 0 (Intro): 2 kartasi matndan batamom TEPADA (above) */
   .slot-0-1 {
-    width: 115px;
-    height: 145px;
-    top: -55px;
-    left: -12px;
+    width: 140px;
+    height: 105px;
+    top: auto;
+    bottom: calc(100% + 20px);
+    left: 6px;
+    right: auto;
     transform: rotate(-3deg);
   }
   .slot-0-2 {
-    width: 130px;
-    height: 95px;
-    top: -65px;
-    right: -12px;
+    width: 145px;
+    height: 110px;
+    top: auto;
+    bottom: calc(100% + 24px);
+    right: 6px;
+    left: auto;
     transform: rotate(2.5deg);
   }
   .slot-0-3 {
     display: none;
   }
 
+  /* Chunk 1 (Bank): Slot 1-1 matndan TEPADA, Slot 1-2 matndan PASTDA */
   .slot-1-1 {
-    width: 120px;
-    height: 150px;
-    top: -35px;
-    left: -15px;
-    transform: rotate(2deg);
+    width: 145px;
+    height: 110px;
+    top: auto;
+    bottom: calc(100% + 22px);
+    left: 8px;
+    right: auto;
+    transform: rotate(-2.5deg);
   }
   .slot-1-2 {
-    width: 135px;
-    height: 95px;
-    bottom: -40px;
-    right: -12px;
-    transform: rotate(-2.5deg);
+    width: 145px;
+    height: 105px;
+    top: calc(100% + 22px);
+    bottom: auto;
+    right: 8px;
+    left: auto;
+    transform: rotate(2deg);
   }
   .slot-1-3 {
     display: none;
   }
 
+  /* Chunk 2 (3D): Slot 2-1 matndan TEPADA, Slot 2-2 matndan PASTDA */
   .slot-2-1 {
-    width: 135px;
-    height: 100px;
-    top: -40px;
-    left: -12px;
-    transform: rotate(-3deg);
+    width: 145px;
+    height: 105px;
+    top: auto;
+    bottom: calc(100% + 22px);
+    right: 8px;
+    left: auto;
+    transform: rotate(2.5deg);
   }
   .slot-2-2 {
-    width: 115px;
-    height: 145px;
-    bottom: -45px;
-    right: -14px;
-    transform: rotate(2.5deg);
+    width: 140px;
+    height: 110px;
+    top: calc(100% + 22px);
+    bottom: auto;
+    left: 8px;
+    right: auto;
+    transform: rotate(-3deg);
   }
   .slot-2-3 {
     display: none;
   }
 
+  /* Chunk 3 (Cannes): Slot 3-1 matndan TEPADA, Slot 3-2 matndan PASTDA */
   .slot-3-1 {
-    width: 120px;
-    height: 150px;
-    top: -35px;
-    left: -14px;
-    transform: rotate(2deg);
+    width: 140px;
+    height: 110px;
+    top: auto;
+    bottom: calc(100% + 22px);
+    left: 8px;
+    right: auto;
+    transform: rotate(-2deg);
   }
   .slot-3-2 {
-    width: 135px;
-    height: 100px;
-    bottom: -40px;
-    right: -12px;
-    transform: rotate(-2deg);
+    width: 145px;
+    height: 105px;
+    top: calc(100% + 22px);
+    bottom: auto;
+    right: 8px;
+    left: auto;
+    transform: rotate(2.5deg);
   }
 
+  /* Chunk 4 (Philosophy): Slot 4-1 matndan TEPADA, Slot 4-2 matndan PASTDA */
   .slot-4-1 {
-    width: 115px;
-    height: 145px;
-    top: -35px;
-    left: -12px;
-    transform: rotate(-2deg);
+    width: 145px;
+    height: 105px;
+    top: auto;
+    bottom: calc(100% + 22px);
+    right: 8px;
+    left: auto;
+    transform: rotate(2deg);
   }
   .slot-4-2 {
-    width: 130px;
-    height: 95px;
-    bottom: -40px;
-    right: -14px;
-    transform: rotate(2deg);
+    width: 140px;
+    height: 110px;
+    top: calc(100% + 22px);
+    bottom: auto;
+    left: 8px;
+    right: auto;
+    transform: rotate(-2.5deg);
   }
 }
 

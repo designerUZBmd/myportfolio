@@ -162,7 +162,7 @@ export default function AboutPage() {
         introTl.to(
           float0,
           {
-            opacity: isMobile ? 0.65 : 1,
+            opacity: 1,
             scale: 1,
             y: 0,
             stagger: 0.12,
@@ -270,7 +270,7 @@ export default function AboutPage() {
         scrollTl.to(
           float1,
           {
-            opacity: isMobile ? 0.65 : 1,
+            opacity: 1,
             scale: 1,
             y: 0,
             stagger: 0.15,
@@ -333,7 +333,7 @@ export default function AboutPage() {
         scrollTl.to(
           float2,
           {
-            opacity: isMobile ? 0.65 : 1,
+            opacity: 1,
             scale: 1,
             y: 0,
             stagger: 0.15,
@@ -407,7 +407,7 @@ export default function AboutPage() {
         scrollTl.to(
           float3,
           {
-            opacity: isMobile ? 0.65 : 1,
+            opacity: 1,
             scale: 1,
             y: 0,
             stagger: 0.15,
@@ -470,7 +470,7 @@ export default function AboutPage() {
         scrollTl.to(
           float4,
           {
-            opacity: isMobile ? 0.65 : 1,
+            opacity: 1,
             scale: 1,
             y: 0,
             stagger: 0.15,
