@@ -23,7 +23,7 @@ export default function PortfolioClient({
     const prevOverflow = document.body.style.overflow;
     const prevOverscroll = document.body.style.overscrollBehavior;
 
-    document.body.style.backgroundColor = "#ededed";
+    document.body.style.backgroundColor = "#f5fcff";
     document.body.style.overflow = "hidden";
     document.body.style.overscrollBehavior = "none";
 
