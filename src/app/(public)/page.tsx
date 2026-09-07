@@ -10,6 +10,7 @@ import DirectionsSection from "@/components/portfolio/DirectionsSection";
 import ClientsMarquee from "@/components/portfolio/ClientsMarquee";
 import FooterSection from "@/components/portfolio/FooterSection";
 import Head3DScene from "@/components/portfolio/Head3DScene";
+import CircuitBackground from "@/components/portfolio/CircuitBackground";
 
 export default function Home() {
   useRevealer();
@@ -19,6 +20,8 @@ export default function Home() {
       <main>
         <div className="split-layout">
           <div className="split-layout__left">
+            <CircuitBackground />
+            <div id="noise-bg" aria-hidden="true" />
             <Head3DScene />
             <div className="ov">
               <svg className="ov__svg" viewBox="0 0 732 407" fill="none" xmlns="http://www.w3.org/2000/svg">

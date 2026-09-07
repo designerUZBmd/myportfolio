@@ -5,6 +5,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 
 export default function Head3DScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,32 +41,61 @@ export default function Head3DScene() {
     renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
-    // 3. Studio Lighting (clean, natural, neutral cinematic studio lights - NO BLUE!)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.6);
+    // 2.5 Postprocessing Pipeline with Cinematic Bloom
+    const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+      type: THREE.HalfFloatType,
+      format: THREE.RGBAFormat,
+      samples: 4,
+    });
+
+    const composer = new EffectComposer(renderer, renderTarget);
+
+    const renderPass = new RenderPass(scene, camera);
+    renderPass.clearColor = new THREE.Color(0, 0, 0);
+    renderPass.clearAlpha = 0;
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      0.05, // Strength
+      0.40, // Radius
+      0.12  // Threshold
+    );
+    composer.addPass(bloomPass);
+
+    const outputPass = new OutputPass();
+    composer.addPass(outputPass);
+
+    // 3. Cinematic Spotlight Studio Lighting (Face brightly illuminated, hair & sides fall into deep shadow)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.22);
     scene.add(ambientLight);
 
-    // Key light (warm-white studio light from top-front-right: natural skin & relief)
-    const keyLight = new THREE.DirectionalLight(0xfff8f2, 2.2);
-    keyLight.position.set(1.5, 2.0, 2.8);
-    scene.add(keyLight);
+    // Primary Face Spotlight: bright, focused warm-natural beam aimed directly at facial features
+    const faceSpotLight = new THREE.SpotLight(0xfffaf4, 7.5);
+    faceSpotLight.position.set(0.42, 0.55, 2.5);
+    faceSpotLight.angle = 0.44; // tight cone focused on face, leaves hair and back unlit
+    faceSpotLight.penumbra = 0.85; // smooth gradient falloff
+    faceSpotLight.decay = 1.0;
+    faceSpotLight.distance = 6.5;
+    faceSpotLight.target.position.set(-0.01, -0.02, 0.22);
+    scene.add(faceSpotLight);
+    scene.add(faceSpotLight.target);
 
-    // Soft neutral rim light from behind (pure white/silver accent - NO BLUE)
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.6);
-    rimLight.position.set(-2.0, 1.5, -1.8);
-    scene.add(rimLight);
-
-    // Soft neutral fill light
-    const fillLight = new THREE.DirectionalLight(0xfff5ea, 0.7);
-    fillLight.position.set(2.0, -0.5, 1.5);
+    // Soft warm fill light to clearly define face contour and skin tones
+    const fillLight = new THREE.DirectionalLight(0xfff0e2, 0.65);
+    fillLight.position.set(-0.7, 0.1, 2.3);
     scene.add(fillLight);
 
-    // 4. Head Root Group (cinematic ~47° side angle, lowered position overlapping OV logo)
-    const BASE_Y = 0.04; // Positioned comfortably overlapping top of OV logo
-    const BASE_YAW = 0.82; // ~47 degrees for a dramatic, clear 3/4 side profile
+    // 4. Head Root Group (X and Y preserved, angle turned back to balanced 3/4)
+    const BASE_X = -0.07; // Preserved
+    const BASE_Y = -0.06; // Preserved
+    const BASE_YAW = 0.60; // ~34 degrees: turned back from facing screen directly
+    const BASE_PITCH = 0.08; // ~4.6 degrees: slight downward gaze (nigohni pasaytirish)
 
     const headGroup = new THREE.Group();
-    headGroup.position.set(0, BASE_Y, 0);
+    headGroup.position.set(BASE_X, BASE_Y, 0);
     headGroup.rotation.y = BASE_YAW;
+    headGroup.rotation.x = BASE_PITCH;
     scene.add(headGroup);
 
     // Uniforms for subtle shader effects (NO BLUE - pure warm white and silver stars)
@@ -85,7 +118,7 @@ export default function Head3DScene() {
     gltfLoader.setDRACOLoader(dracoLoader);
 
     gltfLoader.load(
-      "/models/kalla-Optimized.glb",
+      "/models/mosh.glb",
       (gltf) => {
         const root = gltf.scene;
 
@@ -118,12 +151,12 @@ export default function Head3DScene() {
                 mat.map.colorSpace = THREE.SRGBColorSpace;
                 mat.map.needsUpdate = true;
               }
-              mat.roughness = 0.6;
-              mat.metalness = 0.05;
+              mat.roughness = 0.85; // Natural matte skin texture, non-plastic
+              mat.metalness = 0.0;
               mat.transparent = true; // Enable transparency for bottom dissolve
               mat.depthWrite = true;
 
-              // Smooth transparent neck dissolve & subtle neutral silver rim (NO BLUE)
+              // Smooth transparent neck dissolve
               mat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = { value: 0 };
 
@@ -167,10 +200,6 @@ export default function Head3DScene() {
                   "#include <dithering_fragment>",
                   `
                   #include <dithering_fragment>
-                  // Pure neutral silver rim highlight on silhouette edges (NO BLUE)
-                  float fresnel = pow(1.0 - max(0.0, dot(normalize(vWorldNormal), normalize(vCamDir))), 4.0);
-                  gl_FragColor.rgb += vec3(1.0, 1.0, 1.0) * (fresnel * 0.2);
-
                   // Lower neck smoothly becomes transparent and completely disappears
                   // -0.45 (chin/throat) is 100% solid -> fades smoothly down to -0.92 (0% transparent)
                   float neckAlpha = smoothstep(-0.92, -0.45, vLocalY);
@@ -315,42 +344,19 @@ export default function Head3DScene() {
       }
     );
 
-    // 6. Interactive Mouse Parallax & Tracking
+    // 6. Interactive Subtle Mouse Tracking (Follows gaze smoothly, no drag)
     const mouse = { x: BASE_YAW, y: 0, targetX: BASE_YAW, targetY: 0 };
-    let isDragging = false;
-    let prevMousePos = { x: 0, y: 0 };
-    let dragRotation = { x: 0, y: 0 };
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (window.innerWidth <= 992) return;
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       const normY = -(e.clientY / window.innerHeight) * 2 + 1;
 
       mouse.targetX = BASE_YAW + normX * 0.22;
       mouse.targetY = normY * 0.18;
-
-      if (isDragging) {
-        const deltaX = e.clientX - prevMousePos.x;
-        const deltaY = e.clientY - prevMousePos.y;
-        dragRotation.y += deltaX * 0.008;
-        dragRotation.x += deltaY * 0.008;
-        prevMousePos = { x: e.clientX, y: e.clientY };
-      }
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      if (e.clientX <= window.innerWidth * 0.3) {
-        isDragging = true;
-        prevMousePos = { x: e.clientX, y: e.clientY };
-      }
-    };
-
-    const handleMouseUp = () => {
-      isDragging = false;
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
 
     // 7. Resize Handler
     const handleResize = () => {
@@ -359,8 +365,11 @@ export default function Head3DScene() {
       height = container.clientHeight || window.innerHeight;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      const dpr = Math.min(window.devicePixelRatio, 1.75);
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(dpr);
+      composer.setSize(width, height);
+      composer.setPixelRatio(dpr);
     };
     window.addEventListener("resize", handleResize);
 
@@ -370,6 +379,11 @@ export default function Head3DScene() {
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+
+      // Performance guard: pause execution if tab is inactive or left sidebar is hidden on mobile
+      if (document.hidden || !container || container.clientWidth === 0) {
+        return;
+      }
 
       const elapsedTime = clock.getElapsedTime();
 
@@ -386,14 +400,12 @@ export default function Head3DScene() {
       const idlePitch = Math.cos(elapsedTime * 0.85) * 0.03;
       const idleBob = Math.sin(elapsedTime * 1.3) * 0.02;
 
-      headGroup.rotation.y = mouse.x + idleYaw + dragRotation.y;
-      headGroup.rotation.x = -mouse.y + idlePitch + dragRotation.x;
+      headGroup.rotation.y = mouse.x + idleYaw;
+      headGroup.rotation.x = BASE_PITCH - mouse.y + idlePitch;
+      headGroup.position.x = BASE_X;
       headGroup.position.y = BASE_Y + idleBob;
 
-      dragRotation.x *= 0.94;
-      dragRotation.y *= 0.94;
-
-      renderer.render(scene, camera);
+      composer.render();
     };
 
     animate();
@@ -402,13 +414,13 @@ export default function Head3DScene() {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("resize", handleResize);
 
       particleMaterial?.dispose();
       particleGeometry?.dispose();
       dracoLoader.dispose();
+      composer.dispose();
+      renderTarget.dispose();
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -421,9 +433,6 @@ export default function Head3DScene() {
       ref={containerRef}
       className={`head-3d-wrapper ${isLoaded ? "is-loaded" : ""}`}
       aria-label="3D Head Model"
-      title="3D Model — Kursorni kuzatadi va boshqariladi"
-    >
-      <div className="grain-overlay" aria-hidden="true" />
-    </div>
+    />
   );
 }
