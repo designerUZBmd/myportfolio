@@ -1,16 +1,12 @@
-"use client";
-import { useRevealer } from "@/hooks/useRevealer";
-import ContactForm from "@/components/ui/ContactForm";
+import ContactClient from "./ContactClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact — Obloqulov Muhammad",
+  description:
+    "Yangi loyiha, hamkorlik yoki maslahat uchun bog'laning. UX/UI dizayn, 3D va raqamli mahsulotlar.",
+};
 
 export default function Contact() {
-  useRevealer();
-
-  return (
-    <>
-      <div className="revealer"></div>
-      <main>
-        <ContactForm />
-      </main>
-    </>
-  );
+  return <ContactClient />;
 }

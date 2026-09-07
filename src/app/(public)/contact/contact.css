@@ -1,0 +1,464 @@
+/* ==========================================================================
+   MINIMAL CONTACT PAGE — PROGRESSIVE CONVERSATION + ALIGNED DOCK
+   ========================================================================== */
+
+.contact-page {
+  width: 100%;
+  min-height: 100dvh;
+  min-height: 100vh;
+  background-color: #f5fcff;
+  color: #13110e;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: calc(var(--navbar-height, 4.5rem) + 1.5rem) var(--page-gutter) calc(var(--navbar-height, 4.5rem) + var(--page-gutter) + 2rem + env(safe-area-inset-bottom, 0px));
+  font-family: var(--font-body), "HelveticaNeue", -apple-system, sans-serif;
+}
+
+/* Atmospheric light gradient */
+.contact-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50vh;
+  background: linear-gradient(180deg, #96dfff 0%, #c4eeff 30%, #f5fcff 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --------------------------------------------------------------------------
+   CENTER CONVERSATION AREA
+   -------------------------------------------------------------------------- */
+.contact-center-container {
+  width: 100%;
+  max-width: 580px;
+  margin: auto 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Balanced, elegant RAHMAT size */
+.contact-rahmat-title {
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #13110e;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Text-only trigger button under Rahmat */
+.talk-text-trigger {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+  font-weight: 500;
+  color: #13110e;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+  position: relative;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  letter-spacing: -0.02em;
+}
+
+.talk-text-trigger::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background-color: #13110e;
+  transform: scaleX(0.4);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.talk-text-trigger:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+.talk-text-trigger:hover::after {
+  transform: scaleX(1);
+}
+
+.talk-text-trigger .trigger-arrow {
+  font-size: 1.1em;
+  transition: transform 0.2s ease;
+}
+
+.talk-text-trigger:hover .trigger-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* --------------------------------------------------------------------------
+   PROGRESSIVE FORM (REVEALS STEP-BY-STEP)
+   -------------------------------------------------------------------------- */
+.progressive-form {
+  width: 100%;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  text-align: left;
+}
+
+/* Smooth fade-in animation for each emerging step */
+.step-appear {
+  animation: stepIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progressive-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.prog-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(19, 17, 14, 0.45);
+  margin-bottom: 0.35rem;
+}
+
+/* Minimal input with ONLY bottom light border */
+.prog-input,
+.prog-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(19, 17, 14, 0.18);
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #13110e;
+  padding: 0.75rem 0;
+  box-sizing: border-box;
+  letter-spacing: -0.015em;
+  border-radius: 0;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.prog-input:focus,
+.prog-textarea:focus {
+  outline: none;
+  border-bottom-color: #13110e;
+}
+
+.prog-input::placeholder,
+.prog-textarea::placeholder {
+  color: rgba(19, 17, 14, 0.42);
+  font-weight: 400;
+}
+
+.prog-textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+/* Service tag pills under textarea */
+.prog-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+}
+
+.prog-tag-pill {
+  appearance: none;
+  background: rgba(19, 17, 14, 0.05);
+  border: none;
+  outline: none;
+  color: rgba(19, 17, 14, 0.65);
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(0.84rem, 0.95vw, 0.95rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding: 0.52rem 1.05rem;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.prog-tag-pill:hover {
+  background: rgba(19, 17, 14, 0.1);
+  color: #13110e;
+  transform: translateY(-1px);
+}
+
+.prog-tag-pill.selected {
+  background: #13110e;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(19, 17, 14, 0.12);
+  transform: translateY(-1px);
+}
+
+.prog-tag-pill .tag-check {
+  font-size: 0.82em;
+  line-height: 1;
+}
+
+/* Submit row */
+.prog-submit-row {
+  margin-top: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.prog-error-msg {
+  font-size: 0.85rem;
+  color: #d32f2f;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.prog-send-btn {
+  appearance: none;
+  background: #13110e;
+  color: #ffffff;
+  border: none;
+  padding: 0.85rem 1.8rem;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.prog-send-btn .btn-arrow {
+  transition: transform 0.2s ease;
+}
+
+.prog-send-btn:hover:not(:disabled) {
+  background: #2a2824;
+  transform: translateY(-1px);
+}
+
+.prog-send-btn:hover:not(:disabled) .btn-arrow {
+  transform: translateX(3px);
+}
+
+.prog-send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Success state */
+.prog-success-msg {
+  padding: 1.5rem 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.prog-success-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #13110e;
+  margin: 0;
+}
+
+.prog-success-sub {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(19, 17, 14, 0.6);
+  max-width: 420px;
+  margin: 0;
+}
+
+.prog-reset-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #13110e;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   BOTTOM DOCK (ALIGNED ON THE RIGHT WITH NAVBAR__BOTTOM)
+   -------------------------------------------------------------------------- */
+.contact-bottom-dock {
+  position: fixed;
+  bottom: var(--page-gutter);
+  right: var(--page-gutter);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 1.8vw, 2.2rem);
+  padding: clamp(0.75rem, 1.2vw, 1.75rem) 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* Left part of dock: Contact links */
+.dock-contact-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 1vw, 1.2rem);
+}
+
+.dock-link {
+  font-size: clamp(0.82rem, 0.95vw, 0.95rem);
+  font-weight: 500;
+  color: #13110e;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.dock-link:hover {
+  opacity: 0.6;
+}
+
+.dock-bullet {
+  color: rgba(19, 17, 14, 0.25);
+  font-size: 0.8rem;
+}
+
+/* Divider inside dock */
+.dock-sep {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(19, 17, 14, 0.12);
+}
+
+/* Right part of dock: "Created by" + obloqulov logo */
+.dock-branding {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dock-by {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(19, 17, 14, 0.45);
+  white-space: nowrap;
+}
+
+.dock-logo {
+  display: flex;
+  align-items: center;
+  color: #13110e;
+  transition: opacity 0.2s ease;
+}
+
+.dock-logo:hover {
+  opacity: 0.75;
+}
+
+.dock-logo svg {
+  width: clamp(84px, 7vw, 106px);
+  height: auto;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE (MOBILE & TABLET BREAKPOINTS)
+   -------------------------------------------------------------------------- */
+@media (max-width: 992px) {
+  .contact-page {
+    justify-content: space-between;
+    min-height: 100dvh;
+    padding-top: calc(var(--navbar-height, 4.5rem) + 1.2rem);
+    padding-bottom: calc(var(--navbar-height, 4.5rem) + var(--page-gutter) + 2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .contact-center-container {
+    margin: auto 0;
+  }
+
+  /* On mobile: dock sits with plenty of breathing room, transparent background */
+  .contact-bottom-dock {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    width: 100%;
+    max-width: 580px;
+    margin: clamp(3.5rem, 9vh, 6rem) auto 1rem auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    text-align: center;
+  }
+
+  .dock-sep {
+    display: none;
+  }
+
+  .dock-contact-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.8rem;
+  }
+
+  .dock-bullet {
+    display: inline;
+    color: rgba(19, 17, 14, 0.25);
+  }
+
+  .dock-branding {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+}
