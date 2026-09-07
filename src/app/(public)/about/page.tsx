@@ -41,11 +41,11 @@ function CharSpan({ text, bold = false }: { text: string; bold?: boolean }) {
     <>
       {tokens.map((token, tIdx) => {
         if (/^\s+$/.test(token)) {
-          return token.split("").map((_, sIdx) => (
-            <span key={`s-${tIdx}-${sIdx}`} className="char char-space">
-              &nbsp;
+          return (
+            <span key={`s-${tIdx}`} className="credits-space">
+              {" "}
             </span>
-          ));
+          );
         }
 
         return (
@@ -75,31 +75,36 @@ export default function AboutPage() {
         const stream = streamRef.current;
         if (!stage || !stream) return;
 
-        const chars0 = gsap.utils.toArray<HTMLElement>("#chunk-0 .char");
-        const chars1 = gsap.utils.toArray<HTMLElement>("#chunk-1 .char");
-        const chars2 = gsap.utils.toArray<HTMLElement>("#chunk-2 .char");
-        const chars3 = gsap.utils.toArray<HTMLElement>("#chunk-3 .char");
-        const chars4 = gsap.utils.toArray<HTMLElement>("#chunk-4 .char");
+        const isMobile = window.innerWidth <= 768;
+        const selector = isMobile ? ".word" : ".char";
+
+        const items0 = gsap.utils.toArray<HTMLElement>(`#chunk-0 ${selector}`);
+        const items1 = gsap.utils.toArray<HTMLElement>(`#chunk-1 ${selector}`);
+        const items2 = gsap.utils.toArray<HTMLElement>(`#chunk-2 ${selector}`);
+        const items3 = gsap.utils.toArray<HTMLElement>(`#chunk-3 ${selector}`);
+        const items4 = gsap.utils.toArray<HTMLElement>(`#chunk-4 ${selector}`);
+
+        const yShift = isMobile ? 10 : 16;
 
         // --------------------------------------------------------------------
-        // 1. BOSHLANG'ICH HOLAT: Harflar to'liq ko'rinmas (opacity: 0, y: 16)
+        // 1. BOSHLANG'ICH HOLAT: Elementlar ko'rinmas
         // --------------------------------------------------------------------
-        gsap.set(chars0, { opacity: 0, y: 16 });
-        gsap.set("#inline-media-0", { opacity: 0, scale: 0.6, y: 16 });
+        gsap.set(items0, { opacity: 0, y: yShift });
+        gsap.set("#inline-media-0", { opacity: 0, scale: 0.6, y: yShift });
 
-        gsap.set([chars1, chars2, chars3, chars4], { opacity: 0, y: 16 });
-        gsap.set("#inline-media-2", { opacity: 0, scale: 0.6, y: 16 });
-        gsap.set("#inline-badge-3", { opacity: 0, scale: 0.6, y: 16 });
+        gsap.set([items1, items2, items3, items4], { opacity: 0, y: yShift });
+        gsap.set("#inline-media-2", { opacity: 0, scale: 0.6, y: yShift });
+        gsap.set("#inline-badge-3", { opacity: 0, scale: 0.6, y: yShift });
 
         // --------------------------------------------------------------------
         // 2. KIRISH ANIMATSIYASI: Sahifa ochilgach (qora parda ketgach ~1.3s da)
         // --------------------------------------------------------------------
         const introTl = gsap.timeline({ delay: 1.3 });
 
-        introTl.to(chars0, {
+        introTl.to(items0, {
           opacity: 1,
           y: 0,
-          stagger: 0.012,
+          stagger: isMobile ? 0.028 : 0.012,
           duration: 0.45,
           ease: "power2.out",
         });
@@ -135,14 +140,13 @@ export default function AboutPage() {
           (ty) => (Math.abs(ty) / finalTravel) * 100
         );
 
-        const isMobile = window.innerWidth <= 768;
         const scrollTl = gsap.timeline({
           scrollTrigger: {
             trigger: stage,
             start: "top top",
-            end: isMobile ? "+=6200" : "+=11500",
+            end: isMobile ? "+=5500" : "+=11500",
             pin: true,
-            scrub: isMobile ? 1.0 : 1.4,
+            scrub: isMobile ? 0.35 : 1.2,
             anticipatePin: 1,
             invalidateOnRefresh: true,
           },
@@ -162,11 +166,11 @@ export default function AboutPage() {
         // CHUNK 0: Skroll boshlanishi bilan o'chadi
         // ====================================================================
         scrollTl.to(
-          chars0,
+          items0,
           {
             opacity: 0,
-            y: -16,
-            stagger: 0.025,
+            y: -yShift,
+            stagger: isMobile ? (3.0 / items0.length) : 0.025,
             duration: 2.0,
             ease: "power1.in",
           },
@@ -177,7 +181,7 @@ export default function AboutPage() {
           {
             opacity: 0,
             scale: 0.7,
-            y: -16,
+            y: -yShift,
             duration: 1.8,
             ease: "power1.in",
           },
@@ -190,22 +194,22 @@ export default function AboutPage() {
         const tc1 = timeCenters[1];
         const enter1Start = Math.max(1.5, tc1 - 8.0);
         scrollTl.to(
-          chars1,
+          items1,
           {
             opacity: 1,
             y: 0,
-            stagger: (6.0 / chars1.length),
+            stagger: (6.0 / items1.length),
             duration: 2.0,
             ease: "power2.out",
           },
           enter1Start
         );
         scrollTl.to(
-          chars1,
+          items1,
           {
             opacity: 0,
-            y: -16,
-            stagger: (5.0 / chars1.length),
+            y: -yShift,
+            stagger: (5.0 / items1.length),
             duration: 2.0,
             ease: "power1.in",
           },
@@ -218,11 +222,11 @@ export default function AboutPage() {
         const tc2 = timeCenters[2];
         const enter2Start = tc2 - 6.5;
         scrollTl.to(
-          chars2,
+          items2,
           {
             opacity: 1,
             y: 0,
-            stagger: (5.5 / chars2.length),
+            stagger: (5.5 / items2.length),
             duration: 2.0,
             ease: "power2.out",
           },
@@ -240,11 +244,11 @@ export default function AboutPage() {
           enter2Start + 3.5
         );
         scrollTl.to(
-          chars2,
+          items2,
           {
             opacity: 0,
-            y: -16,
-            stagger: (5.0 / chars2.length),
+            y: -yShift,
+            stagger: (5.0 / items2.length),
             duration: 2.0,
             ease: "power1.in",
           },
@@ -255,7 +259,7 @@ export default function AboutPage() {
           {
             opacity: 0,
             scale: 0.7,
-            y: -16,
+            y: -yShift,
             duration: 2.0,
             ease: "power1.in",
           },
@@ -268,11 +272,11 @@ export default function AboutPage() {
         const tc3 = timeCenters[3];
         const enter3Start = tc3 - 6.5;
         scrollTl.to(
-          chars3,
+          items3,
           {
             opacity: 1,
             y: 0,
-            stagger: (5.5 / chars3.length),
+            stagger: (5.5 / items3.length),
             duration: 2.0,
             ease: "power2.out",
           },
@@ -290,11 +294,11 @@ export default function AboutPage() {
           enter3Start + 3.5
         );
         scrollTl.to(
-          chars3,
+          items3,
           {
             opacity: 0,
-            y: -16,
-            stagger: (5.0 / chars3.length),
+            y: -yShift,
+            stagger: (5.0 / items3.length),
             duration: 2.0,
             ease: "power1.in",
           },
@@ -305,7 +309,7 @@ export default function AboutPage() {
           {
             opacity: 0,
             scale: 0.7,
-            y: -16,
+            y: -yShift,
             duration: 2.0,
             ease: "power1.in",
           },
@@ -318,22 +322,22 @@ export default function AboutPage() {
         const tc4 = timeCenters[4];
         const enter4Start = tc4 - 6.5;
         scrollTl.to(
-          chars4,
+          items4,
           {
             opacity: 1,
             y: 0,
-            stagger: (5.5 / chars4.length),
+            stagger: (5.5 / items4.length),
             duration: 2.0,
             ease: "power2.out",
           },
           enter4Start
         );
         scrollTl.to(
-          chars4,
+          items4,
           {
             opacity: 0,
-            y: -16,
-            stagger: (5.0 / chars4.length),
+            y: -yShift,
+            stagger: (5.0 / items4.length),
             duration: 2.0,
             ease: "power1.in",
           },

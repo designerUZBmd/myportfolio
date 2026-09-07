@@ -81,10 +81,13 @@
   white-space: nowrap;
 }
 
+.credits-space {
+  display: inline;
+}
+
 .credits-chunk .char {
   display: inline-block;
   color: #000000;
-  will-change: opacity, transform;
 }
 
 .credits-chunk .char-bold,
