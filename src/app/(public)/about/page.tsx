@@ -62,6 +62,33 @@ function CharSpan({ text, bold = false }: { text: string; bold?: boolean }) {
   );
 }
 
+/**
+ * Matn atrofida suzuvchi (parallax) rasm o'rni (placeholder slot).
+ * Keyinchalik o'zingiz xohlagan rasmni slot ichiga qo'yishingiz mumkin.
+ */
+function ImageSlot({
+  slotId,
+  number,
+  title,
+  className = "",
+}: {
+  slotId: string;
+  number: string;
+  title: string;
+  className?: string;
+}) {
+  return (
+    <div className={`floating-card ${className}`} data-slot={slotId}>
+      <div className="floating-card-inner">
+        <div className="slot-placeholder-content">
+          <span className="slot-num">{number}</span>
+          <span className="slot-title">{title}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AboutPage() {
   useRevealer();
   const pageRef = useRef<HTMLDivElement>(null);
@@ -84,6 +111,12 @@ export default function AboutPage() {
         const items3 = gsap.utils.toArray<HTMLElement>(`#chunk-3 ${selector}`);
         const items4 = gsap.utils.toArray<HTMLElement>(`#chunk-4 ${selector}`);
 
+        const float0 = gsap.utils.toArray<HTMLElement>("#chunk-0 .floating-card");
+        const float1 = gsap.utils.toArray<HTMLElement>("#chunk-1 .floating-card");
+        const float2 = gsap.utils.toArray<HTMLElement>("#chunk-2 .floating-card");
+        const float3 = gsap.utils.toArray<HTMLElement>("#chunk-3 .floating-card");
+        const float4 = gsap.utils.toArray<HTMLElement>("#chunk-4 .floating-card");
+
         const yShift = isMobile ? 10 : 16;
 
         // --------------------------------------------------------------------
@@ -95,6 +128,10 @@ export default function AboutPage() {
         gsap.set([items1, items2, items3, items4], { opacity: 0, y: yShift });
         gsap.set("#inline-media-2", { opacity: 0, scale: 0.6, y: yShift });
         gsap.set("#inline-badge-3", { opacity: 0, scale: 0.6, y: yShift });
+
+        // Suzuvchi placeholder kartalari
+        gsap.set(float0, { opacity: 0, scale: 0.8, y: isMobile ? 25 : 45 });
+        gsap.set([float1, float2, float3, float4], { opacity: 0, scale: 0.8, y: isMobile ? 35 : 70 });
 
         // --------------------------------------------------------------------
         // 2. KIRISH ANIMATSIYASI: Sahifa ochilgach (qora parda ketgach ~1.3s da)
@@ -119,6 +156,20 @@ export default function AboutPage() {
             ease: "back.out(1.8)",
           },
           "-=0.35"
+        );
+
+        // Kirishdagi suzuvchi rasmlar paydo bo'ladi
+        introTl.to(
+          float0,
+          {
+            opacity: isMobile ? 0.65 : 1,
+            scale: 1,
+            y: 0,
+            stagger: 0.12,
+            duration: 0.75,
+            ease: "power2.out",
+          },
+          "-=0.25"
         );
 
         // --------------------------------------------------------------------
@@ -163,7 +214,7 @@ export default function AboutPage() {
         );
 
         // ====================================================================
-        // CHUNK 0: Skroll boshlanishi bilan o'chadi
+        // CHUNK 0: Skroll boshlanishi bilan o'chadi + rasmlari yuqoriga suzib ketadi
         // ====================================================================
         scrollTl.to(
           items0,
@@ -187,9 +238,21 @@ export default function AboutPage() {
           },
           3.5
         );
+        scrollTl.to(
+          float0,
+          {
+            opacity: 0,
+            scale: 0.88,
+            y: (i) => (i % 2 === 0 ? -60 : -100),
+            stagger: 0.08,
+            duration: 2.0,
+            ease: "power1.in",
+          },
+          1.2
+        );
 
         // ====================================================================
-        // CHUNK 1: 1-gap ketishi bilanoq darhol kirib keladi (uzilishsiz)
+        // CHUNK 1: 1-gap ketishi bilanoq darhol kirib keladi (uzilishsiz) + Parallax rasmlar
         // ====================================================================
         const tc1 = timeCenters[1];
         const enter1Start = Math.max(1.5, tc1 - 8.0);
@@ -205,11 +268,35 @@ export default function AboutPage() {
           enter1Start
         );
         scrollTl.to(
+          float1,
+          {
+            opacity: isMobile ? 0.65 : 1,
+            scale: 1,
+            y: 0,
+            stagger: 0.15,
+            duration: 2.2,
+            ease: "power2.out",
+          },
+          enter1Start
+        );
+        scrollTl.to(
           items1,
           {
             opacity: 0,
             y: -yShift,
             stagger: (5.0 / items1.length),
+            duration: 2.0,
+            ease: "power1.in",
+          },
+          tc1 + 6.5
+        );
+        scrollTl.to(
+          float1,
+          {
+            opacity: 0,
+            scale: 0.88,
+            y: (i) => (i % 2 === 0 ? -70 : -120),
+            stagger: 0.08,
             duration: 2.0,
             ease: "power1.in",
           },
@@ -244,6 +331,18 @@ export default function AboutPage() {
           enter2Start + 3.5
         );
         scrollTl.to(
+          float2,
+          {
+            opacity: isMobile ? 0.65 : 1,
+            scale: 1,
+            y: 0,
+            stagger: 0.15,
+            duration: 2.2,
+            ease: "power2.out",
+          },
+          enter2Start
+        );
+        scrollTl.to(
           items2,
           {
             opacity: 0,
@@ -264,6 +363,18 @@ export default function AboutPage() {
             ease: "power1.in",
           },
           tc2 + 7.5
+        );
+        scrollTl.to(
+          float2,
+          {
+            opacity: 0,
+            scale: 0.88,
+            y: (i) => (i % 2 === 0 ? -80 : -130),
+            stagger: 0.08,
+            duration: 2.0,
+            ease: "power1.in",
+          },
+          tc2 + 6.5
         );
 
         // ====================================================================
@@ -294,6 +405,18 @@ export default function AboutPage() {
           enter3Start + 3.5
         );
         scrollTl.to(
+          float3,
+          {
+            opacity: isMobile ? 0.65 : 1,
+            scale: 1,
+            y: 0,
+            stagger: 0.15,
+            duration: 2.2,
+            ease: "power2.out",
+          },
+          enter3Start
+        );
+        scrollTl.to(
           items3,
           {
             opacity: 0,
@@ -315,6 +438,18 @@ export default function AboutPage() {
           },
           tc3 + 7.5
         );
+        scrollTl.to(
+          float3,
+          {
+            opacity: 0,
+            scale: 0.88,
+            y: (i) => (i % 2 === 0 ? -75 : -125),
+            stagger: 0.08,
+            duration: 2.0,
+            ease: "power1.in",
+          },
+          tc3 + 6.5
+        );
 
         // ====================================================================
         // CHUNK 4: ENG OXIRGI GAP — MARKAZGA KELADI, TO'LIQ O'QILADI VA O'CHADI
@@ -333,11 +468,35 @@ export default function AboutPage() {
           enter4Start
         );
         scrollTl.to(
+          float4,
+          {
+            opacity: isMobile ? 0.65 : 1,
+            scale: 1,
+            y: 0,
+            stagger: 0.15,
+            duration: 2.2,
+            ease: "power2.out",
+          },
+          enter4Start
+        );
+        scrollTl.to(
           items4,
           {
             opacity: 0,
             y: -yShift,
             stagger: (5.0 / items4.length),
+            duration: 2.0,
+            ease: "power1.in",
+          },
+          tc4 + 6.5
+        );
+        scrollTl.to(
+          float4,
+          {
+            opacity: 0,
+            scale: 0.88,
+            y: (i) => (i % 2 === 0 ? -80 : -130),
+            stagger: 0.08,
             duration: 2.0,
             ease: "power1.in",
           },
@@ -363,6 +522,13 @@ export default function AboutPage() {
             <div ref={streamRef} className="credits-stream">
               {/* CHUNK 0: Kirish jumlasi — Sahifa ochilganda o'zi yoziladi */}
               <div id="chunk-0" className="credits-chunk">
+                {/* Suzuvchi vizual kartalar (Intro) */}
+                <div className="floating-media-group group-0">
+                  <ImageSlot slotId="intro-1" number="01" title="Portrait / Craft" className="slot-0-1" />
+                  <ImageSlot slotId="intro-2" number="02" title="Studio / Process" className="slot-0-2" />
+                  <ImageSlot slotId="intro-3" number="03" title="Concept / 3D" className="slot-0-3" />
+                </div>
+
                 <CharSpan text="Salom. Men " />
                 <CharSpan text="Muhammad Obloqulov" bold />
                 <span id="inline-media-0" className="credits-inline-media">
@@ -371,7 +537,7 @@ export default function AboutPage() {
                     alt="Muhammad Obloqulov"
                     fill
                     className="credits-inline-img"
-                    sizes="120px"
+                    sizes="160px"
                     priority
                   />
                 </span>
@@ -380,6 +546,13 @@ export default function AboutPage() {
 
               {/* CHUNK 1: Bank va tizimlar — Skroll bilan bitta oqimda keladi */}
               <div id="chunk-1" className="credits-chunk">
+                {/* Suzuvchi vizual kartalar (Fintech & Apps) */}
+                <div className="floating-media-group group-1">
+                  <ImageSlot slotId="bank-1" number="04" title="Fintech Mobile App" className="slot-1-1" />
+                  <ImageSlot slotId="bank-2" number="05" title="Banking Dashboard" className="slot-1-2" />
+                  <ImageSlot slotId="bank-3" number="06" title="Design System" className="slot-1-3" />
+                </div>
+
                 <CharSpan text="Dastlab oddiy veb-sahifalardan boshlab, yillar davomida murakkab korporativ ekotizimlargacha bo‘lgan yo‘lni bosib o‘tdim. Har kuni minglab insonlar va soha mutaxassislari foydalanadigan " />
                 <CharSpan text="bank ilovalari, ichki boshqaruv vositalari" bold />
                 <CharSpan text=" hamda " />
@@ -389,6 +562,13 @@ export default function AboutPage() {
 
               {/* CHUNK 2: 3D modellashtirish — Skroll bilan bitta oqimda keladi */}
               <div id="chunk-2" className="credits-chunk">
+                {/* Suzuvchi vizual kartalar (3D & Spatial) */}
+                <div className="floating-media-group group-2">
+                  <ImageSlot slotId="3d-1" number="07" title="3D Spatial Render" className="slot-2-1" />
+                  <ImageSlot slotId="3d-2" number="08" title="Product Visualization" className="slot-2-2" />
+                  <ImageSlot slotId="3d-3" number="09" title="CGI & Lighting" className="slot-2-3" />
+                </div>
+
                 <CharSpan text="Lekin men uchun dizayn faqat 2D ekranlar bilan cheklanmaydi. Men mahsulotlarni " />
                 <CharSpan text="3D modellashtirish, fazoviy chuqurlik va vizualizatsiyani" bold />
                 <CharSpan text=" yaxshi ko‘raman." />
@@ -398,7 +578,7 @@ export default function AboutPage() {
                     alt="3D Visualization"
                     fill
                     className="credits-inline-img"
-                    sizes="120px"
+                    sizes="160px"
                   />
                 </span>
                 <CharSpan text=" Logistika kompaniyalarining murakkab tizimlari va veb-saytlarini jonlantirishda 3D elementlardan faol foydalanaman." />
@@ -406,6 +586,12 @@ export default function AboutPage() {
 
               {/* CHUNK 3: Cannes festivali — Skroll bilan bitta oqimda keladi */}
               <div id="chunk-3" className="credits-chunk">
+                {/* Suzuvchi vizual kartalar (Awards & Recognition) */}
+                <div className="floating-media-group group-3">
+                  <ImageSlot slotId="cannes-1" number="10" title="Cannes Lions Certificate" className="slot-3-1" />
+                  <ImageSlot slotId="cannes-2" number="11" title="Award-Winning Case" className="slot-3-2" />
+                </div>
+
                 <CharSpan text="2022-yilda ijodiy izlanishlarim xalqaro " />
                 <CharSpan text="Young Lions Cannes" bold />
                 <CharSpan text=" festivali elektron sertifikati bilan e'tirof etildi." />
@@ -417,6 +603,12 @@ export default function AboutPage() {
 
               {/* CHUNK 4: Falsafa va maqsad — Skroll bilan bitta oqimda keladi */}
               <div id="chunk-4" className="credits-chunk">
+                {/* Suzuvchi vizual kartalar (Philosophy & Aesthetics) */}
+                <div className="floating-media-group group-4">
+                  <ImageSlot slotId="craft-1" number="12" title="Editorial Typography" className="slot-4-1" />
+                  <ImageSlot slotId="craft-2" number="13" title="Aesthetic Detail" className="slot-4-2" />
+                </div>
+
                 <CharSpan text="Bugun men murakkab muammolarni " />
                 <CharSpan text="sodda, nafis va esda qolarli mahsulotlarga" bold />
                 <CharSpan text=" aylantirishda davom etmoqdaman. Har bir piksel, har bir harakat va har bir tajriba — mukammallikka bo‘lgan intilishimdir." />
