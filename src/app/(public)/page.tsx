@@ -1,7 +1,10 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import './page.css'
 import { useRevealer } from "@/hooks/useRevealer";
 import Image from 'next/image'
+import { supabase } from "@/lib/supabase";
+import { HomeSettings } from "@/types/database";
 
 import HeroBioText from "@/components/portfolio/HeroBioText";
 import ProcessGrid from "@/components/portfolio/ProcessGrid";
@@ -14,6 +17,32 @@ import CircuitBackground from "@/components/portfolio/CircuitBackground";
 
 export default function Home() {
   useRevealer();
+  const [settings, setSettings] = useState<HomeSettings | null>(null);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const { data, error } = await supabase
+          .from("home_settings")
+          .select("*")
+          .eq("id", "default")
+          .maybeSingle();
+
+        if (!error && data) {
+          setSettings(data as HomeSettings);
+        }
+      } catch (err) {
+        console.error("Failed to load home settings:", err);
+      }
+    }
+
+    loadSettings();
+  }, []);
+
+  const heroLabel = settings?.hero_label || "SALOM /";
+  const heroImage = settings?.hero_image || "/images/photo.jpg";
+  const heroBio = settings?.hero_bio || "Men UX/UI dizayn orqali murakkab g‘oyalarni sodda va tushunarli interfeyslarga aylantiraman. Kreativ dizayn va funksionallikni birlashtirib, barcha dizayn yo‘nalishlaridan foydalanaman.";
+
   return (
     <>
       <div className="revealer"></div>
@@ -35,33 +64,47 @@ export default function Home() {
             <section className="hero">
               <div className="hero__container">
                 <div className="hero__top-card">
-                  <span className="hero__label">SALOM /</span>
+                  <span className="hero__label">{heroLabel}</span>
                   <Image
                     className="hero__image"
-                    src="/images/photo.jpg"
+                    src={heroImage}
                     alt="obloqulov"
                     width={527}
                     height={700}
                     priority
                   />
                 </div>
-                <HeroBioText text="Men UX/UI dizayn orqali murakkab g‘oyalarni sodda va tushunarli interfeyslarga aylantiraman. Kreativ dizayn va funksionallikni birlashtirib, barcha dizayn yo‘nalishlaridan foydalanaman." />
+                <HeroBioText text={heroBio} />
               </div>
             </section>
 
             <section className="portfolio">
-              <ProcessGrid />
-              <ProjectList />
+              <ProcessGrid text={settings?.process_text} images={settings?.process_images} />
+              <ProjectList
+                buttonTitle={settings?.portfolio_btn_title}
+                buttonCategory={settings?.portfolio_btn_category}
+                buttonYear={settings?.portfolio_btn_year}
+              />
             </section>
 
             {/* Asosiy Yo‘nalishlar Bo‘limi */}
-            <DirectionsSection />
+            <DirectionsSection
+              label={settings?.directions_label}
+              statementText={settings?.directions_statement}
+              marqueeImages={settings?.directions_marquee_images}
+              editorialImages={{
+                left: settings?.editorial_image_left,
+                tall: settings?.editorial_image_tall,
+                short1: settings?.editorial_image_short1,
+                short2: settings?.editorial_image_short2,
+              }}
+            />
 
             {/* Hamkorlar va Kompaniyalar Bo‘limi */}
-            <ClientsMarquee />
+            <ClientsMarquee label={settings?.brands_label} />
 
             {/* Footer Bo‘limi (ovloqulo_v.png 1:1) */}
-            <FooterSection />
+            <FooterSection label={settings?.footer_label} statement={settings?.footer_statement} />
           </div>
         </div>
       </main>

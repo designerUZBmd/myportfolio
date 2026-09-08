@@ -9,6 +9,8 @@ type DashboardStats = {
   publishedCases: number;
   totalCategories: number;
   totalGalleryItems: number;
+  totalDirections: number;
+  totalBrands: number;
 };
 
 type RecentCase = {
@@ -28,6 +30,8 @@ export default function AdminDashboard() {
     publishedCases: 0,
     totalCategories: 0,
     totalGalleryItems: 0,
+    totalDirections: 0,
+    totalBrands: 0,
   });
   const [recentCases, setRecentCases] = useState<RecentCase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +52,14 @@ export default function AdminDashboard() {
           .from("gallery_items")
           .select("id");
 
+        const { data: dirData } = await supabase
+          .from("directions")
+          .select("id");
+
+        const { data: brandData } = await supabase
+          .from("brands")
+          .select("id");
+
         const cases = casesData || [];
         const publishedCount = cases.filter((c) => c.is_published).length;
 
@@ -56,6 +68,8 @@ export default function AdminDashboard() {
           publishedCases: publishedCount,
           totalCategories: (catData || []).length,
           totalGalleryItems: (galData || []).length,
+          totalDirections: (dirData || []).length,
+          totalBrands: (brandData || []).length,
         });
 
         setRecentCases(cases.slice(0, 5));
@@ -79,7 +93,10 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <Link href="/admin/home" className="admin-btn admin-btn--secondary">
+            🏠 Bosh Sahifa Sozlamalari
+          </Link>
           <Link href="/admin/portfolio/create" className="admin-btn admin-btn--primary">
             + Yangi Loyiha
           </Link>
@@ -101,6 +118,16 @@ export default function AdminDashboard() {
         <div className="admin-stat-card">
           <span className="admin-stat-label">Kategoriyalar</span>
           <span className="admin-stat-value">{stats.totalCategories}</span>
+        </div>
+
+        <div className="admin-stat-card">
+          <span className="admin-stat-label">Yo‘nalishlar</span>
+          <span className="admin-stat-value">{stats.totalDirections}</span>
+        </div>
+
+        <div className="admin-stat-card">
+          <span className="admin-stat-label">Brendlar</span>
+          <span className="admin-stat-value">{stats.totalBrands}</span>
         </div>
 
         <div className="admin-stat-card">

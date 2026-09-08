@@ -60,3 +60,51 @@ export interface GalleryItem {
   order?: number;
   created_at?: string;
 }
+
+export interface Direction {
+  id: string;
+  number: string;
+  title: string;
+  description: string;
+  image: string;
+  order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HomeSettings {
+  id: string;
+  hero_label: string;
+  hero_image: string;
+  hero_bio: string;
+  process_text: string;
+  process_images: string[];
+  portfolio_btn_title?: string;
+  portfolio_btn_category?: string;
+  portfolio_btn_year?: string;
+  directions_marquee_images?: string[];
+  editorial_image_left?: string;
+  editorial_image_tall?: string;
+  editorial_image_short1?: string;
+  editorial_image_short2?: string;
+  directions_statement?: string;
+  directions_label?: string;
+  brands_label?: string;
+  footer_label: string;
+  footer_statement: string;
+  updated_at?: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  logo_url: string;
+  height: number;
+  order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+

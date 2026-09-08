@@ -78,6 +78,11 @@ export default function AdminLayout({
       exact: true,
     },
     {
+      title: "Bosh sahifa",
+      href: "/admin/home",
+      exact: false,
+    },
+    {
       title: "Portfolio",
       href: "/admin/portfolio",
       exact: false,

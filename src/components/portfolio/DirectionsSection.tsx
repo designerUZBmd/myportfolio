@@ -5,6 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import DirectionPreviewWebGL, { DirectionItemData } from "./DirectionPreviewWebGL";
+import { supabase } from "@/lib/supabase";
 import "./DirectionsSection.css";
 
 if (typeof window !== "undefined") {
@@ -13,7 +14,7 @@ if (typeof window !== "undefined") {
 
 export type { DirectionItemData };
 
-const directions: DirectionItemData[] = [
+const defaultDirections: DirectionItemData[] = [
   {
     id: "ux-ui",
     number: "01",
@@ -48,21 +49,75 @@ const directions: DirectionItemData[] = [
   },
 ];
 
-const marqueeImages = [
-  { src: "/images/process1.jpg", alt: "Design showcase 1" },
-  { src: "/images/process2.jpg", alt: "Design showcase 2" },
-  { src: "/images/process3.jpg", alt: "Design showcase 3" },
-  { src: "/images/photo.jpg", alt: "Creative work 4" },
-  { src: "/images/process1.jpg", alt: "Design showcase 5" },
-  { src: "/images/process2.jpg", alt: "Design showcase 6" },
-  { src: "/images/process3.jpg", alt: "Design showcase 7" },
-  { src: "/images/photo.jpg", alt: "Creative work 8" },
+const defaultMarqueeImages = [
+  "/images/process1.jpg",
+  "/images/process2.jpg",
+  "/images/process3.jpg",
+  "/images/photo.jpg",
+  "/images/process1.jpg",
+  "/images/process2.jpg",
+  "/images/process3.jpg",
+  "/images/photo.jpg",
 ];
 
-const statementText =
+const defaultStatementText =
   "Murakkab g‘oyalardan tortib vizual jihatdan mukammal raqamli mahsulotlargacha. Har bir detalda chuqur foydalanuvchi qulayligi, aniq funksionallik va zamonaviy estetika uyg‘unligi.";
 
-export default function DirectionsSection() {
+interface EditorialImages {
+  left?: string;
+  tall?: string;
+  short1?: string;
+  short2?: string;
+}
+
+export default function DirectionsSection({
+  initialDirections,
+  statementText: customStatement,
+  label = "ASOSIY YO‘NALISHLAR /",
+  marqueeImages: customMarqueeImages,
+  editorialImages,
+}: {
+  initialDirections?: DirectionItemData[];
+  statementText?: string;
+  label?: string;
+  marqueeImages?: string[];
+  editorialImages?: EditorialImages;
+} = {}) {
+  const statementText = customStatement || defaultStatementText;
+  const activeMarquee =
+    Array.isArray(customMarqueeImages) && customMarqueeImages.length > 0
+      ? customMarqueeImages
+      : defaultMarqueeImages;
+
+  const leftImg = editorialImages?.left || "/images/process3.jpg";
+  const tallImg = editorialImages?.tall || "/images/process1.jpg";
+  const short1Img = editorialImages?.short1 || "/images/photo.jpg";
+  const short2Img = editorialImages?.short2 || "/images/process2.jpg";
+
+  const [directions, setDirections] = useState<DirectionItemData[]>(
+    initialDirections || defaultDirections
+  );
+
+  useEffect(() => {
+    async function loadDirections() {
+      try {
+        const { data, error } = await supabase
+          .from("directions")
+          .select("id, number, title, description, image, order, is_active")
+          .eq("is_active", true)
+          .order("order", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          setDirections(data as DirectionItemData[]);
+        }
+      } catch (err) {
+        console.error("Failed to load directions from Supabase:", err);
+      }
+    }
+
+    loadDirections();
+  }, []);
+
   const marqueeTrackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
@@ -309,12 +364,12 @@ export default function DirectionsSection() {
         >
           <div ref={marqueeTrackRef} className="directions-marquee__track">
             {/* First sequence */}
-            {marqueeImages.map((img, index) => (
+            {activeMarquee.map((imgSrc, index) => (
               <div key={`m1-${index}`} className="directions-marquee__item">
                 <div className="directions-marquee__image-wrapper">
                   <Image
-                    src={img.src}
-                    alt={img.alt}
+                    src={imgSrc}
+                    alt={`Showcase ${index + 1}`}
                     fill
                     className="directions-marquee__image"
                     sizes="280px"
@@ -324,12 +379,12 @@ export default function DirectionsSection() {
             ))}
 
             {/* Duplicated sequence for seamless infinite loop */}
-            {marqueeImages.map((img, index) => (
+            {activeMarquee.map((imgSrc, index) => (
               <div key={`m2-${index}`} className="directions-marquee__item">
                 <div className="directions-marquee__image-wrapper">
                   <Image
-                    src={img.src}
-                    alt={img.alt}
+                    src={imgSrc}
+                    alt={`Showcase ${index + 1}`}
                     fill
                     className="directions-marquee__image"
                     sizes="280px"
@@ -345,7 +400,7 @@ export default function DirectionsSection() {
           <div className="directions-editorial-media">
             <div className="directions-editorial-image-wrapper">
               <Image
-                src="/images/process3.jpg"
+                src={leftImg}
                 alt="Design Vision"
                 fill
                 className="directions-editorial-image"
@@ -360,7 +415,7 @@ export default function DirectionsSection() {
               <div ref={card1Ref} className="directions-editorial__card directions-editorial__card--tall">
                 <div ref={img1Ref} className="directions-editorial__img-wrapper">
                   <Image
-                    src="/images/process1.jpg"
+                    src={tallImg}
                     alt="Design Process 1"
                     fill
                     className="directions-editorial__img"
@@ -394,7 +449,7 @@ export default function DirectionsSection() {
                   <div ref={card2Ref} className="directions-editorial__card directions-editorial__card--short-1">
                     <div ref={img2Ref} className="directions-editorial__img-wrapper">
                       <Image
-                        src="/images/photo.jpg"
+                        src={short1Img}
                         alt="Design Process 2"
                         fill
                         className="directions-editorial__img"
@@ -407,7 +462,7 @@ export default function DirectionsSection() {
                   <div ref={card3Ref} className="directions-editorial__card directions-editorial__card--short-2">
                     <div ref={img3Ref} className="directions-editorial__img-wrapper">
                       <Image
-                        src="/images/process2.jpg"
+                        src={short2Img}
                         alt="Design Process 3"
                         fill
                         className="directions-editorial__img"
@@ -425,7 +480,7 @@ export default function DirectionsSection() {
       {/* 2. Full-Width Directions List with Three.js Cloth Wave Ripple Preview */}
       <div className="directions-content">
         <div className="directions-header">
-          <span className="directions-header__label">ASOSIY YO‘NALISHLAR /</span>
+          <span className="directions-header__label">{label}</span>
         </div>
 
         <div className="directions-list" onMouseLeave={handleListMouseLeave}>

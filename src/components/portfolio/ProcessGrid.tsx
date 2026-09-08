@@ -12,10 +12,12 @@ if (typeof window !== "undefined") {
 
 interface ProcessGridProps {
   text?: string;
+  images?: string[];
 }
 
 export default function ProcessGrid({
   text = "Foydalanuvchi muammosidan boshlab, dizayn va texnik yechimlargacha bo'lgan jarayon. Har bir qaror real ehtiyoj va aniq natijaga asoslanadi.",
+  images = ["/images/process1.jpg", "/images/process2.jpg", "/images/process3.jpg"],
 }: ProcessGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const card1Ref = useRef<HTMLDivElement>(null);
@@ -58,7 +60,7 @@ export default function ProcessGrid({
             yPercent: -45,
             ease: "none",
             scrollTrigger: {
-              trigger: container,
+              trigger: card1Ref.current,
               start: "top bottom",
               end: "bottom top",
               scrub: 1.2,
@@ -68,9 +70,9 @@ export default function ProcessGrid({
 
         gsap.fromTo(
           img1Ref.current,
-          { yPercent: -25 },
+          { yPercent: -20 },
           {
-            yPercent: 25,
+            yPercent: 20,
             ease: "none",
             scrollTrigger: {
               trigger: card1Ref.current,
@@ -82,7 +84,7 @@ export default function ProcessGrid({
         );
       }
 
-      // --- Card 2: Top-to-Bottom Clip Reveal + Parallax ---
+      // --- Card 2: Top-to-Bottom Clip Reveal + Deep Parallax ---
       if (card2Ref.current && img2Ref.current) {
         gsap.fromTo(
           card2Ref.current,
@@ -101,12 +103,12 @@ export default function ProcessGrid({
 
         gsap.fromTo(
           card2Ref.current,
-          { yPercent: 55 },
+          { yPercent: 30 },
           {
             yPercent: -35,
             ease: "none",
             scrollTrigger: {
-              trigger: container,
+              trigger: card2Ref.current,
               start: "top bottom",
               end: "bottom top",
               scrub: 1.5,
@@ -196,13 +198,17 @@ export default function ProcessGrid({
 
   const words = text.split(" ");
 
+  const img1 = images[0] || "/images/process1.jpg";
+  const img2 = images[1] || "/images/process2.jpg";
+  const img3 = images[2] || "/images/process3.jpg";
+
   return (
     <section ref={containerRef} className="process-grid">
       <div className="process-grid__top">
         <div ref={card1Ref} className="process-grid__card process-grid__card--1">
           <div ref={img1Ref} className="process-grid__image-wrapper">
             <Image
-              src="/images/process1.jpg"
+              src={img1}
               alt="Design Process 1"
               fill
               className="process-grid__image"
@@ -214,7 +220,7 @@ export default function ProcessGrid({
         <div ref={card2Ref} className="process-grid__card process-grid__card--2">
           <div ref={img2Ref} className="process-grid__image-wrapper">
             <Image
-              src="/images/process2.jpg"
+              src={img2}
               alt="Design Process 2"
               fill
               className="process-grid__image"
@@ -228,7 +234,7 @@ export default function ProcessGrid({
         <div ref={card3Ref} className="process-grid__card process-grid__card--3">
           <div ref={img3Ref} className="process-grid__image-wrapper">
             <Image
-              src="/images/process3.jpg"
+              src={img3}
               alt="Design Process 3"
               fill
               className="process-grid__image"

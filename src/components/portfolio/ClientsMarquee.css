@@ -83,3 +83,50 @@
   }
 }
 
+.clients-header {
+  margin-bottom: 2rem;
+  padding: 0 var(--page-gutter);
+}
+
+.clients-header__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.client-logo-img {
+  max-width: 140px;
+  max-height: 48px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.82;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.client-card:hover .client-logo-img {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.client-logo-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #13110e;
+  opacity: 0.82;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.client-card:hover .client-logo-text {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+

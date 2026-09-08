@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
+import { supabase } from "@/lib/supabase";
 import "./ClientsMarquee.css";
+
 
 export interface ClientCardData {
   id: string;
   name: string;
   height: number; // Staggered height in px
-  logo: React.ReactNode;
+  logo?: React.ReactNode;
+  logo_url?: string;
 }
 
 const clientsData: ClientCardData[] = [
@@ -171,9 +174,92 @@ const clientsData: ClientCardData[] = [
   },
 ];
 
-export default function ClientsMarquee() {
+const defaultClientsData: ClientCardData[] = clientsData;
+
+
+const defaultSvgMap: Record<string, React.ReactNode> = {
+  payme: clientsData[0].logo,
+  uzum: clientsData[1].logo,
+  epam: clientsData[2].logo,
+  click: clientsData[3].logo,
+  kapitalbank: clientsData[4].logo,
+  kapital: clientsData[4].logo,
+  yandex: clientsData[5].logo,
+  itpark: clientsData[6].logo,
+  "it park": clientsData[6].logo,
+  apex: clientsData[7].logo,
+  anorbank: clientsData[8].logo,
+  anor: clientsData[8].logo,
+  humo: clientsData[9].logo,
+  tbc: clientsData[10].logo,
+  "tbc bank": clientsData[10].logo,
+  nova: clientsData[11].logo,
+  "nova ai": clientsData[11].logo,
+};
+
+function renderClientLogo(client: ClientCardData) {
+  if (client.logo) return client.logo;
+
+  if (client.logo_url && client.logo_url.trim() !== "") {
+    return (
+      <img
+        src={client.logo_url}
+        alt={client.name}
+        className="client-logo-img"
+      />
+    );
+  }
+
+  const normalized = client.name.toLowerCase().trim();
+  const normalizedKey = normalized.replace(/[^a-z0-9]/g, "");
+
+  if (defaultSvgMap[normalized] || defaultSvgMap[normalizedKey] || defaultSvgMap[client.id]) {
+    return defaultSvgMap[normalized] || defaultSvgMap[normalizedKey] || defaultSvgMap[client.id];
+  }
+
+  return <span className="client-logo-text">{client.name}</span>;
+}
+
+interface ClientsMarqueeProps {
+  label?: string;
+  initialClients?: ClientCardData[];
+}
+
+export default function ClientsMarquee({
+  label = "MEN ISHLAGAN BRENDLAR /",
+  initialClients,
+}: ClientsMarqueeProps = {}) {
+  const [clients, setClients] = useState<ClientCardData[]>(
+    initialClients || defaultClientsData
+  );
   const trackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
+
+  useEffect(() => {
+    async function loadBrands() {
+      try {
+        const { data, error } = await supabase
+          .from("brands")
+          .select("id, name, logo_url, height, order, is_active")
+          .eq("is_active", true)
+          .order("order", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const mapped: ClientCardData[] = data.map((b) => ({
+            id: b.id,
+            name: b.name,
+            height: b.height || 240,
+            logo_url: b.logo_url || "",
+          }));
+          setClients(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load brands from Supabase:", err);
+      }
+    }
+
+    loadBrands();
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -190,7 +276,7 @@ export default function ClientsMarquee() {
     return () => {
       tweenRef.current?.kill();
     };
-  }, []);
+  }, [clients]);
 
   const handleMouseEnter = () => {
     if (tweenRef.current) {
@@ -216,6 +302,12 @@ export default function ClientsMarquee() {
 
   return (
     <section className="clients-section">
+      {label && (
+        <div className="clients-header">
+          <span className="clients-header__label">{label}</span>
+        </div>
+      )}
+
       <div
         className="clients-marquee"
         onMouseEnter={handleMouseEnter}
@@ -223,27 +315,27 @@ export default function ClientsMarquee() {
       >
         <div ref={trackRef} className="clients-marquee__track">
           {/* First Sequence */}
-          {clientsData.map((client, idx) => (
+          {clients.map((client, idx) => (
             <div
               key={`c1-${client.id}-${idx}`}
               className="client-card"
               style={{ height: `${client.height}px` }}
             >
               <div className="client-card__logo-wrap">
-                {client.logo}
+                {renderClientLogo(client)}
               </div>
             </div>
           ))}
 
           {/* Duplicated Sequence for Infinite Loop */}
-          {clientsData.map((client, idx) => (
+          {clients.map((client, idx) => (
             <div
               key={`c2-${client.id}-${idx}`}
               className="client-card"
               style={{ height: `${client.height}px` }}
             >
               <div className="client-card__logo-wrap">
-                {client.logo}
+                {renderClientLogo(client)}
               </div>
             </div>
           ))}

@@ -71,9 +71,15 @@ const defaultProjects: ProjectItemData[] = [
 
 export default function ProjectList({
   initialProjects,
+  buttonTitle = "Barcha loyihalar",
+  buttonCategory = "Portfolio arxivi",
+  buttonYear = "Arxiv",
 }: {
   initialProjects?: ProjectItemData[];
-}) {
+  buttonTitle?: string;
+  buttonCategory?: string;
+  buttonYear?: string;
+} = {}) {
   const { handleNavigation } = useNavigation();
   const [projectsList, setProjectsList] = useState<ProjectItemData[]>(
     initialProjects || defaultProjects
@@ -292,20 +298,15 @@ export default function ProjectList({
           href="/portfolio"
           className="project-item project-item--all"
           onClick={handleNavigation("/portfolio")}
-          onMouseEnter={() => {
-            if (window.innerWidth > 768) {
-              setActiveProject(null);
-            }
-          }}
         >
           <div className="project-item__left">
             <span className="project-item__index">+</span>
-            <h3 className="project-item__title">Barcha loyihalar</h3>
+            <h3 className="project-item__title">{buttonTitle}</h3>
           </div>
 
           <div className="project-item__right">
-            <span className="project-item__category">Portfolio arxivi</span>
-            <span className="project-item__year">Arxiv</span>
+            <span className="project-item__category">{buttonCategory}</span>
+            <span className="project-item__year">{buttonYear}</span>
             <span className="project-item__arrow">→</span>
           </div>
         </Link>
