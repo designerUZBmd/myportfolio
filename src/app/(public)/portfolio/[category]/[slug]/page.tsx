@@ -19,6 +19,22 @@ async function getCase(slug: string) {
   return data;
 }
 
+async function getNextCase(currentSlug: string) {
+  const { data } = await supabase
+    .from("portfolio_cases")
+    .select(`id, slug, title, categories ( title, slug )`)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false });
+
+  if (!data || data.length <= 1) return null;
+
+  const currentIndex = data.findIndex((c) => c.slug === currentSlug);
+  if (currentIndex === -1) return null;
+
+  const nextIndex = (currentIndex + 1) % data.length;
+  return data[nextIndex];
+}
+
 export const revalidate = 60;
 
 export async function generateStaticParams() {
@@ -55,5 +71,7 @@ export default async function Page({ params }: Props) {
 
   if (!item) return <h1>Case not found</h1>;
 
-  return <CaseClient item={item} />;
+  const nextCase = await getNextCase(slug);
+
+  return <CaseClient item={item} nextCase={nextCase} />;
 }
