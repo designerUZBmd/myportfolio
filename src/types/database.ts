@@ -107,4 +107,33 @@ export interface Brand {
   updated_at?: string;
 }
 
+export interface AboutFloatingCard {
+  id: string;
+  number: string;
+  title: string;
+  image_url: string;
+}
 
+export interface AboutSection {
+  id: number;
+  text: string;
+  floating_cards: AboutFloatingCard[];
+}
+
+export interface AboutCareer {
+  year: string;
+  company: string;
+  role: string;
+}
+
+export interface AboutSettings {
+  id: string;
+  sections: AboutSection[];
+  career_list: AboutCareer[];
+  resume_url: string;
+  resume_filename: string;
+  telegram_url: string;
+  telegram_handle: string;
+  email: string;
+  updated_at?: string;
+}

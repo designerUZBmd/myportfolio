@@ -83,6 +83,11 @@ export default function AdminLayout({
       exact: false,
     },
     {
+      title: "About sahifasi",
+      href: "/admin/about",
+      exact: false,
+    },
+    {
       title: "Portfolio",
       href: "/admin/portfolio",
       exact: false,
