@@ -65,12 +65,12 @@ const DEFAULT_CAREER_LIST: AboutCareer[] = [
   { year: "2018 — 2019", company: "YUZ1", role: "UI/UX Web Designer" },
 ];
 
-const SECTION_TITLES = [
-  "1-Bo‘lim: Kirish va Tanishtiruv",
-  "2-Bo‘lim: Bank va Ekotizimlar",
-  "3-Bo‘lim: 3D Modellashtirish va CGI",
-  "4-Bo‘lim: Cannes Lions va Xalqaro E'tirof",
-  "5-Bo‘lim: Falsafa va Mukammallik",
+const SECTION_CONFIG = [
+  { short: "1. Kirish", full: "1-Bo‘lim: Kirish va Tanishtiruv" },
+  { short: "2. Bank & Fintech", full: "2-Bo‘lim: Bank va Ekotizimlar" },
+  { short: "3. 3D & Spatial", full: "3-Bo‘lim: 3D Modellashtirish va CGI" },
+  { short: "4. Cannes Lions", full: "4-Bo‘lim: Cannes Lions va Xalqaro E'tirof" },
+  { short: "5. Falsafa", full: "5-Bo‘lim: Falsafa va Mukammallik" },
 ];
 
 export default function AdminAboutPage() {
@@ -448,22 +448,22 @@ export default function AdminAboutPage() {
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           borderBottom: "1px solid var(--adm-surface-border)",
           marginBottom: "2rem",
-          overflowX: "auto",
-          gap: "0.5rem",
+          gap: "0.35rem",
         }}
       >
-        {SECTION_TITLES.map((title, idx) => (
+        {SECTION_CONFIG.map((sec, idx) => (
           <button
             key={idx}
             onClick={() => setActiveTab(idx)}
             style={{
-              padding: "0.85rem 1.25rem",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === idx ? "2px solid #000000" : "2px solid transparent",
-              color: activeTab === idx ? "#000000" : "var(--adm-text-secondary)",
+              padding: "0.75rem 1.1rem",
+              background: activeTab === idx ? "#000000" : "#ffffff",
+              border: "1px solid var(--adm-surface-border)",
+              borderBottom: activeTab === idx ? "1px solid #000000" : "1px solid var(--adm-surface-border)",
+              color: activeTab === idx ? "#ffffff" : "var(--adm-text-secondary)",
               fontWeight: activeTab === idx ? 700 : 500,
               fontSize: "0.82rem",
               cursor: "pointer",
@@ -473,18 +473,18 @@ export default function AdminAboutPage() {
               transition: "all 0.15s ease",
             }}
           >
-            {title}
+            {sec.short}
           </button>
         ))}
 
         <button
           onClick={() => setActiveTab(5)}
           style={{
-            padding: "0.85rem 1.25rem",
-            background: "none",
-            border: "none",
-            borderBottom: activeTab === 5 ? "2px solid #000000" : "2px solid transparent",
-            color: activeTab === 5 ? "#000000" : "var(--adm-text-secondary)",
+            padding: "0.75rem 1.1rem",
+            background: activeTab === 5 ? "#000000" : "#ffffff",
+            border: "1px solid var(--adm-surface-border)",
+            borderBottom: activeTab === 5 ? "1px solid #000000" : "1px solid var(--adm-surface-border)",
+            color: activeTab === 5 ? "#ffffff" : "var(--adm-text-secondary)",
             fontWeight: activeTab === 5 ? 700 : 500,
             fontSize: "0.82rem",
             cursor: "pointer",
@@ -506,7 +506,7 @@ export default function AdminAboutPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
               <div>
                 <h2 style={{ fontSize: "1.05rem", fontWeight: 700, margin: 0 }}>
-                  {SECTION_TITLES[activeTab]} — Matn va Inline Media
+                  {SECTION_CONFIG[activeTab]?.full} — Matn va Inline Media
                 </h2>
                 <span className="admin-form-helper">
                   Matndagi so‘zlarni qalin qilish uchun <b>**qalin matn**</b>, matn orasiga rasm qo‘yish uchun <b>[img: URL]</b> tokenlaridan foydalaning.
