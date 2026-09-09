@@ -80,7 +80,29 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
   }, [sections]);
 
   useEffect(() => {
+    // Sahifa yangilanganda har doim tepadan boshlanishini ta'minlash
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+      window.scrollTo(0, 0);
+    }
+
     let ctx: gsap.Context;
+    let introTl: gsap.core.Timeline | null = null;
+    let introAccelerated = false;
+    // Foydalanuvchi sahifaga kiriboq skroll qilsa, introni sakratmasdan ~0.4 soniyada tez va silliq oxiriga yetkazish
+    const accelerateIntro = () => {
+      if (introTl && !introAccelerated && introTl.progress() < 1) {
+        introAccelerated = true;
+        introTl.delay(0);
+        introTl.timeScale(3.5);
+        introTl.play();
+      }
+    };
+
+    window.addEventListener("wheel", accelerateIntro, { passive: true });
+    window.addEventListener("touchmove", accelerateIntro, { passive: true });
 
     const timer = setTimeout(() => {
       ctx = gsap.context(() => {
@@ -130,7 +152,14 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
         // --------------------------------------------------------------------
         // 2. KIRISH ANIMATSIYASI: Sahifa ochilgach (qora parda ketgach ~1.3s da)
         // --------------------------------------------------------------------
-        const introTl = gsap.timeline({ delay: 1.3 });
+        introTl = gsap.timeline({
+          delay: 1.3,
+          onComplete: () => {
+            gsap.set(items0, { opacity: 1, y: 0 });
+            gsap.set(float0, { opacity: 1, scale: 1, y: 0 });
+            if (media0.length > 0) gsap.set(media0, { opacity: 1, scale: 1, y: 0 });
+          },
+        });
 
         introTl.to(items0, {
           opacity: 1,
@@ -197,6 +226,18 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
             scrub: isMobile ? 0.35 : 1.2,
             anticipatePin: 1,
             invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              // Foydalanuvchi skroll qilganda introni tez va silliq yakunlaymiz
+              if (self.progress > 0.0005) {
+                accelerateIntro();
+              }
+              // Skroll eng tepaga qaytganda 1-bo'lim to'liq ko'rinishini kafolatlaymiz
+              if (self.progress === 0 && introTl && introTl.progress() >= 0.99) {
+                gsap.set(items0, { opacity: 1, y: 0 });
+                gsap.set(float0, { opacity: 1, scale: 1, y: 0 });
+                if (media0.length > 0) gsap.set(media0, { opacity: 1, scale: 1, y: 0 });
+              }
+            },
           },
         });
 
@@ -211,22 +252,26 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
         );
 
         // ====================================================================
-        // CHUNK 0: Skroll boshlanishi bilan o'chadi + rasmlari yuqoriga suzib ketadi
+        // CHUNK 0: Skroll boshlanganda 1.5 dan so'ng o'chadi.
+        // Skroll yuqoriga qaytganda yana 100% to'liq ko'rinadigan bo'ladi.
         // ====================================================================
-        scrollTl.to(
+        scrollTl.fromTo(
           items0,
+          { opacity: 1, y: 0 },
           {
             opacity: 0,
             y: -yShift,
             stagger: isMobile ? (3.0 / Math.max(1, items0.length)) : 0.025,
             duration: 2.0,
             ease: "power1.in",
+            immediateRender: false,
           },
-          1.2
+          1.5
         );
         if (media0.length > 0) {
-          scrollTl.to(
+          scrollTl.fromTo(
             media0,
+            { opacity: 1, scale: 1, y: 0 },
             {
               opacity: 0,
               scale: 0.7,
@@ -234,21 +279,24 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
               stagger: 0.05,
               duration: 1.8,
               ease: "power1.in",
+              immediateRender: false,
             },
-            3.5
+            1.7
           );
         }
-        scrollTl.to(
+        scrollTl.fromTo(
           float0,
+          { opacity: 1, scale: 1, y: 0 },
           {
             opacity: 0,
             scale: 0.88,
-            y: (i) => (i % 2 === 0 ? -60 : -100),
+            y: (i: number) => (i % 2 === 0 ? -60 : -100),
             stagger: 0.08,
             duration: 2.0,
             ease: "power1.in",
+            immediateRender: false,
           },
-          1.2
+          1.5
         );
 
         // ====================================================================
@@ -575,6 +623,8 @@ export default function AboutClient({ settings }: { settings: AboutSettings }) {
 
     return () => {
       clearTimeout(timer);
+      window.removeEventListener("wheel", accelerateIntro);
+      window.removeEventListener("touchmove", accelerateIntro);
       if (ctx) ctx.revert();
     };
   }, []);

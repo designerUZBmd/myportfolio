@@ -173,7 +173,6 @@
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  transition: transform 0.25s ease;
 }
 
 .floating-card-inner {
@@ -390,7 +389,6 @@
 
   .floating-card {
     pointer-events: none;
-    opacity: 1;
     box-shadow: none;
     border: none;
     background: rgba(255, 255, 255, 0.88);
