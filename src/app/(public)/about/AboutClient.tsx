@@ -47,7 +47,8 @@ function ImageSlot({
             alt={title || number}
             fill
             className="floating-card-img"
-            sizes="(max-width: 768px) 150px, 280px"
+            sizes="(max-width: 768px) 300px, 560px"
+            quality={90}
           />
         ) : (
           <div className="slot-placeholder-content">

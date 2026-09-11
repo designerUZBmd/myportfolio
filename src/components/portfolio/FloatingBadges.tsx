@@ -62,7 +62,8 @@ const circularItems: CircularItem[] = [
           alt="UI Preview"
           fill
           className="circle-card__img"
-          sizes="96px"
+          sizes="192px"
+          quality={90}
         />
         <div className="circle-card__img-badge">UI/UX</div>
       </div>
@@ -114,7 +115,8 @@ const circularItems: CircularItem[] = [
           alt="Designer"
           fill
           className="circle-card__img"
-          sizes="92px"
+          sizes="184px"
+          quality={90}
         />
         <div className="circle-card__img-badge">DESIGN</div>
       </div>

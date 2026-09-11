@@ -68,6 +68,8 @@ export default function HomeClient({ initialSettings }: HomeClientProps) {
                     width={527}
                     height={700}
                     priority
+                    quality={90}
+                    sizes="(max-width: 480px) 320px, (max-width: 992px) 420px, 600px"
                   />
                 </div>
                 <HeroBioText text={heroBio} />

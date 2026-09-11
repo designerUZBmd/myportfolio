@@ -28,10 +28,10 @@ const COL_STAGGERS_MOBILE = [0, 60];
 
 const mod = (n: number, m: number) => (m > 0 ? ((n % m) + m) % m : 0);
 
-function getOptimizedImageUrl(url: string, width = 800) {
+function getOptimizedImageUrl(url: string, width = 1400) {
   if (!url) return "";
   if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
-    return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
+    return url.replace("/upload/", `/upload/f_auto,q_auto:best,w_${width}/`);
   }
   return url;
 }
@@ -500,7 +500,7 @@ export default function GalleryClient({
             {card.item.type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getOptimizedImageUrl(card.item.url, 800)}
+                src={getOptimizedImageUrl(card.item.url, 1400)}
                 alt={artboardName}
                 className="gallery-card__img"
                 draggable={false}

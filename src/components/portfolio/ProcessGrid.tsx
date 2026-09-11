@@ -212,7 +212,8 @@ export default function ProcessGrid({
               alt="Design Process 1"
               fill
               className="process-grid__image"
-              sizes="(max-width: 992px) 100vw, 50vw"
+              sizes="(max-width: 992px) 100vw, 60vw"
+              quality={90}
             />
           </div>
         </div>
@@ -224,7 +225,8 @@ export default function ProcessGrid({
               alt="Design Process 2"
               fill
               className="process-grid__image"
-              sizes="(max-width: 992px) 100vw, 40vw"
+              sizes="(max-width: 992px) 100vw, 50vw"
+              quality={90}
             />
           </div>
         </div>
@@ -238,7 +240,8 @@ export default function ProcessGrid({
               alt="Design Process 3"
               fill
               className="process-grid__image"
-              sizes="(max-width: 992px) 100vw, 30vw"
+              sizes="(max-width: 992px) 100vw, 40vw"
+              quality={90}
             />
           </div>
         </div>

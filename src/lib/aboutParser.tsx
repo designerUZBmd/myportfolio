@@ -110,7 +110,8 @@ export function RenderAboutTokens({
                 alt=""
                 fill
                 className="credits-inline-img"
-                sizes="160px"
+                sizes="260px"
+                quality={90}
                 priority={chunkIndex === 0}
               />
             </span>

@@ -372,7 +372,8 @@ export default function DirectionsSection({
                     alt={`Showcase ${index + 1}`}
                     fill
                     className="directions-marquee__image"
-                    sizes="280px"
+                    sizes="(max-width: 768px) 350px, 500px"
+                    quality={90}
                   />
                 </div>
               </div>
@@ -387,7 +388,8 @@ export default function DirectionsSection({
                     alt={`Showcase ${index + 1}`}
                     fill
                     className="directions-marquee__image"
-                    sizes="280px"
+                    sizes="(max-width: 768px) 350px, 500px"
+                    quality={90}
                   />
                 </div>
               </div>
@@ -404,7 +406,8 @@ export default function DirectionsSection({
                 alt="Design Vision"
                 fill
                 className="directions-editorial-image"
-                sizes="28vw"
+                sizes="(max-width: 992px) 100vw, 40vw"
+                quality={90}
               />
             </div>
           </div>
@@ -419,7 +422,8 @@ export default function DirectionsSection({
                     alt="Design Process 1"
                     fill
                     className="directions-editorial__img"
-                    sizes="(max-width: 992px) 50vw, 28vw"
+                    sizes="(max-width: 992px) 50vw, 35vw"
+                    quality={90}
                   />
                 </div>
               </div>
@@ -453,7 +457,8 @@ export default function DirectionsSection({
                         alt="Design Process 2"
                         fill
                         className="directions-editorial__img"
-                        sizes="(max-width: 992px) 50vw, 22vw"
+                        sizes="(max-width: 992px) 50vw, 30vw"
+                        quality={90}
                       />
                     </div>
                   </div>
@@ -466,7 +471,8 @@ export default function DirectionsSection({
                         alt="Design Process 3"
                         fill
                         className="directions-editorial__img"
-                        sizes="(max-width: 992px) 50vw, 30vw"
+                        sizes="(max-width: 992px) 50vw, 35vw"
+                        quality={90}
                       />
                     </div>
                   </div>

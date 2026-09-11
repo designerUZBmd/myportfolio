@@ -158,6 +158,8 @@ export default function CaseClient({
                             alt={`${item.title} visual ${i + 1}`}
                             width={1600}
                             height={1000}
+                            quality={90}
+                            sizes="(max-width: 992px) 100vw, 1400px"
                             style={{ width: "100%", height: "auto" }}
                           />
                         )}
