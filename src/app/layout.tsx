@@ -4,8 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/ui/Navbar";
 import SmoothScroll from "@/components/ui/SmoothScroll";
 import { ViewTransitions } from "next-view-transitions";
-import siteSettings from "@/data/siteSettings.json";
 import DynamicTabTitle from "@/components/ui/DynamicTabTitle";
+import { getSiteSettings } from "@/lib/getSiteSettings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,34 +13,46 @@ const inter = Inter({
   display: "swap",
 });
 
-const favicon = siteSettings?.favicon_url || "/images/photo.jpg";
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const initialTitle =
+    Array.isArray(settings.title_words) && settings.title_words.length > 0
+      ? settings.title_words[0]
+      : "Obloqulov";
+  const icon = settings.favicon_url || "/icon.svg";
 
-export const metadata: Metadata = {
-  title: "Obloqulov — Digital Designer & Creative Developer",
-  description:
-    "UX/UI dizayn orqali murakkab g'oyalarni sodda va tushunarli interfeyslarga aylantiraman.",
-  icons: {
-    icon: favicon,
-    apple: favicon,
-  },
-  openGraph: {
-    title: "Obloqulov — Digital Designer",
+  return {
+    title: initialTitle,
     description:
       "UX/UI dizayn orqali murakkab g'oyalarni sodda va tushunarli interfeyslarga aylantiraman.",
-    type: "website",
-  },
-};
+    icons: {
+      icon,
+      shortcut: icon,
+      apple: icon,
+    },
+    openGraph: {
+      title: initialTitle,
+      description:
+        "UX/UI dizayn orqali murakkab g'oyalarni sodda va tushunarli interfeyslarga aylantiraman.",
+      type: "website",
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSiteSettings();
+  const favicon = settings.favicon_url || "/icon.svg";
+
   return (
     <ViewTransitions>
       <html lang="en" className={inter.variable}>
         <head>
           <link rel="icon" href={favicon} sizes="any" />
+          <link rel="shortcut icon" href={favicon} />
           <link rel="apple-touch-icon" href={favicon} />
           <link rel="preconnect" href="https://res.cloudinary.com" />
           <link rel="dns-prefetch" href="https://res.cloudinary.com" />
@@ -61,7 +73,7 @@ export default function RootLayout({
           />
         </head>
         <body>
-          <DynamicTabTitle />
+          <DynamicTabTitle initialSettings={settings} />
           <Navbar />
           <SmoothScroll>{children}</SmoothScroll>
         </body>

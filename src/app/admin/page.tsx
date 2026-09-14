@@ -142,7 +142,7 @@ export default function AdminDashboard() {
   async function handleSaveSettings(overrideUrl?: string) {
     const fUrl = (overrideUrl !== undefined ? overrideUrl : faviconUrl).trim();
     const validWords = titleWords.map((w) => w.trim()).filter((w) => w.length > 0);
-    const wordsToSave = validWords.length > 0 ? validWords : ["Obloqulov — Digital Designer"];
+    const wordsToSave = validWords.length > 0 ? validWords : ["Obloqulov"];
 
     setSavingSettings(true);
     try {
@@ -572,6 +572,27 @@ export default function AdminDashboard() {
                     style={{ display: "none" }}
                   />
                 </label>
+
+                {faviconUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFaviconUrl("");
+                      handleSaveSettings("");
+                    }}
+                    className="admin-btn admin-btn--sm"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      backgroundColor: "#fef2f2",
+                      color: "#dc2626",
+                      border: "1px solid #fecaca",
+                    }}
+                  >
+                    <span>🗑 O‘chirish</span>
+                  </button>
+                ) : null}
               </div>
             </div>
 
