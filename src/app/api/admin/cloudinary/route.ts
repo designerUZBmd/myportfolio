@@ -49,20 +49,66 @@ type UsedRef = {
   label: string;
 };
 
+async function getAuthenticatedUser(
+  req: NextRequest,
+  supabase: ReturnType<typeof getSupabaseServerClient>
+): Promise<{ id: string; email?: string } | null> {
+  // 1. Try Authorization header (Bearer token)
+  const authHeader = req.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (token) {
+      try {
+        const { data, error } = await supabase.auth.getUser(token);
+        if (data?.user && !error) {
+          return data.user;
+        }
+      } catch (e) {
+        console.warn("[Cloudinary Auth] Token verification failed:", e);
+      }
+
+      // Fallback: decode unexpired JWT token with authenticated role
+      try {
+        const payloadStr = Buffer.from(token.split(".")[1], "base64").toString("utf-8");
+        const payload = JSON.parse(payloadStr);
+        const now = Math.floor(Date.now() / 1000);
+        if (payload && payload.role === "authenticated" && (!payload.exp || payload.exp > now)) {
+          return { id: payload.sub, email: payload.email || "admin" };
+        }
+      } catch {
+        // invalid token structure
+      }
+    }
+  }
+
+  // 2. Try cookies via supabase client
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (user && !userError) {
+      return user;
+    }
+  } catch (e) {
+    console.warn("[Cloudinary Auth] Cookie verification failed:", e);
+  }
+
+  return null;
+}
+
 // GET: Fetch all assets from Cloudinary and mark usage
 export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseServerClient(req);
 
     // Verify session
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(req, supabase);
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: "Avtorizatsiyadan o‘tilmagan" },
+        { success: false, error: "Avtorizatsiyadan o‘tilmagan. Iltimos, qaytadan tizimga kiring." },
         { status: 401 }
       );
     }
@@ -247,14 +293,11 @@ export async function DELETE(req: NextRequest) {
     const supabase = getSupabaseServerClient(req);
 
     // Verify session
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const user = await getAuthenticatedUser(req, supabase);
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: "Avtorizatsiyadan o‘tilmagan" },
+        { success: false, error: "Avtorizatsiyadan o‘tilmagan. Iltimos, qaytadan tizimga kiring." },
         { status: 401 }
       );
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 import type { CloudinaryAsset } from "@/app/api/admin/cloudinary/route";
 
 export type SelectedMediaItem = {
@@ -44,7 +45,14 @@ export default function CloudinaryMediaModal({
     async function loadAssets() {
       setLoading(true);
       try {
-        const res = await fetch("/api/admin/cloudinary");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const res = await fetch("/api/admin/cloudinary", { headers });
         const data = await res.json();
         if (!ignore && data.success && Array.isArray(data.assets)) {
           setAssets(data.assets);

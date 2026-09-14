@@ -1,7 +1,21 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { supabase } from "@/lib/supabase";
 import type { CloudinaryAsset } from "@/app/api/admin/cloudinary/route";
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch (e) {
+    console.error("Error retrieving session token:", e);
+  }
+  return {};
+}
 
 export default function AdminCloudinaryPage() {
   const [assets, setAssets] = useState<CloudinaryAsset[]>([]);
@@ -29,7 +43,12 @@ export default function AdminCloudinaryPage() {
     else setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/cloudinary");
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch("/api/admin/cloudinary", {
+        headers: {
+          ...authHeaders,
+        },
+      });
       const data = await res.json();
 
       if (data.success && Array.isArray(data.assets)) {
@@ -106,9 +125,13 @@ export default function AdminCloudinaryPage() {
     setDeletingId(asset.public_id);
 
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch("/api/admin/cloudinary", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
         body: JSON.stringify({
           public_id: asset.public_id,
           resource_type: asset.resource_type,
