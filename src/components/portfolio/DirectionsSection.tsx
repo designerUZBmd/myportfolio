@@ -99,6 +99,8 @@ export default function DirectionsSection({
   );
 
   useEffect(() => {
+    if (initialDirections && initialDirections.length > 0) return;
+
     async function loadDirections() {
       try {
         const { data, error } = await supabase

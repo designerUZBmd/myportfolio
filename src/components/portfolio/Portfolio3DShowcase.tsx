@@ -38,6 +38,37 @@ interface CardObject {
   originalIndex: number;
 }
 
+function isWebGLAvailable(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+    );
+  } catch {
+    return false;
+  }
+}
+
+function getCategorySlug(categories: PortfolioItem["categories"]): string {
+  if (!categories) return "web-design";
+  if (Array.isArray(categories)) {
+    const first = (categories as unknown as { slug?: string }[])[0];
+    return first?.slug || "web-design";
+  }
+  return categories.slug || "web-design";
+}
+
+function getCategoryTitle(categories: PortfolioItem["categories"]): string {
+  if (!categories) return "Product Design";
+  if (Array.isArray(categories)) {
+    const first = (categories as unknown as { title?: string }[])[0];
+    return first?.title || "Product Design";
+  }
+  return categories.title || "Product Design";
+}
+
 export default function Portfolio3DShowcase({
   categories,
   items,
@@ -50,6 +81,9 @@ export default function Portfolio3DShowcase({
   const showcaseRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
+  // State to track if WebGL is fully functional on this user's machine
+  const [webGLSupported, setWebGLSupported] = useState(true);
+
   // In-page category selection without full-page navigation / ViewTransition conflicts
   const [selectedCategory, setSelectedCategory] = useState<string>(
     activeCategory || ""
@@ -61,10 +95,14 @@ export default function Portfolio3DShowcase({
     }
   }, [activeCategory]);
 
-  // Client-side instant filter: 0ms latency, zero server roundtrips
+  // Client-side instant filter: 0ms latency, zero server roundtrips, handles array or object categories
   const filteredItems = useMemo(() => {
     if (!selectedCategory) return items;
-    return items.filter((item) => item.categories?.slug === selectedCategory);
+    return items.filter(
+      (item) =>
+        getCategorySlug(item.categories).toLowerCase() ===
+        selectedCategory.toLowerCase()
+    );
   }, [items, selectedCategory]);
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -141,6 +179,11 @@ export default function Portfolio3DShowcase({
     const container = canvasWrapperRef.current;
     if (!container) return;
 
+    if (!isWebGLAvailable()) {
+      setWebGLSupported(false);
+      return;
+    }
+
     let width = container.clientWidth || window.innerWidth;
     let height = container.clientHeight || window.innerHeight;
 
@@ -150,12 +193,27 @@ export default function Portfolio3DShowcase({
     const initialZ = width < 720 ? Math.max(8.5, 8.5 * (0.62 / Math.max(width / height, 0.4))) : 8.5;
     camera.position.set(0, 0, initialZ);
 
-    // WebGL Renderer
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
-    });
+    // WebGL Renderer with graceful error handling
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+    } catch (renderInitErr) {
+      console.warn("WebGL initialization failed, switching to 2D view:", renderInitErr);
+      setWebGLSupported(false);
+      return;
+    }
+
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      console.warn("WebGL context lost, switching to 2D view.");
+      setWebGLSupported(false);
+    };
+    renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -504,11 +562,31 @@ export default function Portfolio3DShowcase({
 
     const clock = new THREE.Clock();
     let animId: number;
+    let idleFrames = 0;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
+      // Performance guard: pause execution if tab is hidden or canvas container is unmounted
+      if (document.hidden || !container || container.clientWidth === 0) {
+        return;
+      }
+
       const targetProgress = targetProgressRef.current;
+      const progressDiff = Math.abs(targetProgress - currentProgress);
+      const mouseDiff =
+        Math.abs(mouse.targetX - mouse.x) + Math.abs(mouse.targetY - mouse.y);
+      const isActivelyMoving = progressDiff > 0.0001 || mouseDiff > 0.0001;
+
+      if (!isActivelyMoving) {
+        idleFrames++;
+        // If settled completely, throttle rendering to conserve GPU and battery
+        if (idleFrames > 30 && idleFrames % 2 !== 0) {
+          return;
+        }
+      } else {
+        idleFrames = 0;
+      }
 
       // Smooth Physics Lerp
       currentProgress += (targetProgress - currentProgress) * 0.085;
@@ -705,6 +783,7 @@ export default function Portfolio3DShowcase({
       });
       textureCacheRef.current.forEach((tex) => tex.dispose());
       textureCacheRef.current.clear();
+      renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
       renderer.dispose();
     };
   }, []);
@@ -718,6 +797,84 @@ export default function Portfolio3DShowcase({
       buildCardsRef.current(filteredItems);
     }
   }, [filteredItems, selectedCategory]);
+
+  // If WebGL is not available on this device/browser, show the clean, fast 2D showcase
+  if (!webGLSupported) {
+    return (
+      <div className="portfolio-fallback-2d">
+        <div className="portfolio-fallback-header">
+          <nav
+            className="huyml-showcase__category-list"
+            style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap", justifyContent: "flex-start" }}
+          >
+            <button
+              onClick={() => handleCategoryClick()}
+              className={`huyml-showcase__cat-item ${
+                !selectedCategory ? "is-active" : ""
+              }`}
+            >
+              <span className="huyml-showcase__cat-name">Barchasi</span>
+              <span className="huyml-showcase__cat-count">{items.length}</span>
+            </button>
+
+            {categories.map((cat) => {
+              const countInCat = items.filter(
+                (i) =>
+                  getCategorySlug(i.categories).toLowerCase() ===
+                  cat.slug.toLowerCase()
+              ).length;
+              if (countInCat === 0) return null;
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.slug)}
+                  className={`huyml-showcase__cat-item ${
+                    selectedCategory === cat.slug ? "is-active" : ""
+                  }`}
+                >
+                  <span className="huyml-showcase__cat-name">{cat.title}</span>
+                  <span className="huyml-showcase__cat-count">{countInCat}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="portfolio-fallback-grid">
+          {filteredItems.map((item) => {
+            const catSlug = getCategorySlug(item.categories);
+            const itemUrl = `/portfolio/${catSlug}/${item.slug}`;
+
+            return (
+              <div
+                key={item.id}
+                className="portfolio-fallback-card"
+                onClick={() => navigateTo(itemUrl)}
+              >
+                <div className="portfolio-fallback-media">
+                  {item.cover_url && (
+                    <img
+                      src={item.cover_url}
+                      alt={item.title}
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                <div className="portfolio-fallback-info">
+                  <span className="portfolio-fallback-year">{item.year}</span>
+                  <h3 className="portfolio-fallback-title">{item.title}</h3>
+                  {item.excerpt && (
+                    <p className="portfolio-fallback-excerpt">{item.excerpt}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   if (filteredItems.length === 0) {
     return (
@@ -758,7 +915,9 @@ export default function Portfolio3DShowcase({
 
           {categories.map((cat) => {
             const countInCat = items.filter(
-              (i) => i.categories?.slug === cat.slug
+              (i) =>
+                getCategorySlug(i.categories).toLowerCase() ===
+                cat.slug.toLowerCase()
             ).length;
             const isActive = selectedCategory === cat.slug;
 
@@ -794,7 +953,7 @@ export default function Portfolio3DShowcase({
               <div className="huyml-showcase__meta-item">
                 <span className="huyml-showcase__meta-label">Service</span>
                 <p className="huyml-showcase__meta-value">
-                  {activeProject.categories?.title || "Product Design"}
+                  {getCategoryTitle(activeProject.categories)}
                 </p>
               </div>
 
@@ -823,7 +982,7 @@ export default function Portfolio3DShowcase({
                 while (diff < -totalReel / 2) diff += totalReel;
               }
               const absDiff = Math.abs(diff);
-              const itemCatSlug = item.categories?.slug || "web-design";
+              const itemCatSlug = getCategorySlug(item.categories);
               const itemUrl = `/portfolio/${itemCatSlug}/${item.slug}`;
 
               let initialOpacity = 0;
@@ -899,7 +1058,7 @@ export default function Portfolio3DShowcase({
             const initialScale = Math.max(0.72, 1.0 - absDiff * 0.28);
             const initialX = diff * 150;
 
-            const itemCatSlug = item.categories?.slug || "web-design";
+            const itemCatSlug = getCategorySlug(item.categories);
             const itemUrl = `/portfolio/${itemCatSlug}/${item.slug}`;
 
             return (

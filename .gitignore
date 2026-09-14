@@ -9,3 +9,4 @@ node_modules
 !.env.example
 *.tsbuildinfo
 public/video/
+supabase/.temp/

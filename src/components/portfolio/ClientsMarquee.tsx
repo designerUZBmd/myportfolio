@@ -236,6 +236,8 @@ export default function ClientsMarquee({
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
+    if (initialClients && initialClients.length > 0) return;
+
     async function loadBrands() {
       try {
         const { data, error } = await supabase

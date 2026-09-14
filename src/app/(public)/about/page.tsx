@@ -2,9 +2,10 @@ import AboutClient from "./AboutClient";
 import { supabase } from "@/lib/supabase";
 import { AboutSettings, AboutSection, AboutCareer } from "@/types/database";
 
-// Dinamik yuklanish: har bir yangilanish darhol aks etishi uchun
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import { unstable_cache } from "next/cache";
+
+// ISR: Cache pre-rendered static HTML at CDN edge for 1 hour; purged instantly via revalidatePath("/about")
+export const revalidate = 3600;
 
 const DEFAULT_SECTIONS: AboutSection[] = [
   {
@@ -75,37 +76,45 @@ const DEFAULT_SETTINGS: AboutSettings = {
   email: "muhammad1obloqulov@gmail.com",
 };
 
-export default async function AboutPage() {
-  let settings: AboutSettings = DEFAULT_SETTINGS;
+const getCachedAboutSettings = unstable_cache(
+  async (): Promise<AboutSettings> => {
+    try {
+      const { data, error } = await supabase
+        .from("about_settings")
+        .select("*")
+        .eq("id", "default")
+        .maybeSingle();
 
-  try {
-    const { data, error } = await supabase
-      .from("about_settings")
-      .select("*")
-      .eq("id", "default")
-      .maybeSingle();
-
-    if (!error && data) {
-      settings = {
-        id: data.id || "default",
-        sections:
-          Array.isArray(data.sections) && data.sections.length >= 5
-            ? data.sections
-            : DEFAULT_SECTIONS,
-        career_list:
-          Array.isArray(data.career_list) && data.career_list.length > 0
-            ? data.career_list
-            : DEFAULT_CAREER_LIST,
-        resume_url: data.resume_url || DEFAULT_SETTINGS.resume_url,
-        resume_filename: data.resume_filename || DEFAULT_SETTINGS.resume_filename,
-        telegram_url: data.telegram_url || DEFAULT_SETTINGS.telegram_url,
-        telegram_handle: data.telegram_handle || DEFAULT_SETTINGS.telegram_handle,
-        email: data.email || DEFAULT_SETTINGS.email,
-      };
+      if (!error && data) {
+        return {
+          id: data.id || "default",
+          sections:
+            Array.isArray(data.sections) && data.sections.length >= 5
+              ? data.sections
+              : DEFAULT_SECTIONS,
+          career_list:
+            Array.isArray(data.career_list) && data.career_list.length > 0
+              ? data.career_list
+              : DEFAULT_CAREER_LIST,
+          resume_url: data.resume_url || DEFAULT_SETTINGS.resume_url,
+          resume_filename:
+            data.resume_filename || DEFAULT_SETTINGS.resume_filename,
+          telegram_url: data.telegram_url || DEFAULT_SETTINGS.telegram_url,
+          telegram_handle:
+            data.telegram_handle || DEFAULT_SETTINGS.telegram_handle,
+          email: data.email || DEFAULT_SETTINGS.email,
+        };
+      }
+    } catch (err) {
+      console.error("About sahifasi sozlamalarini serverda olishda xatolik:", err);
     }
-  } catch (err) {
-    console.error("About sahifasi sozlamalarini serverda olishda xatolik:", err);
-  }
+    return DEFAULT_SETTINGS;
+  },
+  ["about_settings_cache"],
+  { revalidate: 3600, tags: ["about"] }
+);
 
+export default async function AboutPage() {
+  const settings = await getCachedAboutSettings();
   return <AboutClient settings={settings} />;
 }

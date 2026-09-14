@@ -35,7 +35,7 @@ async function getNextCase(currentSlug: string) {
   return data[nextIndex];
 }
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const { data } = await supabase

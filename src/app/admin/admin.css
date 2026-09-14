@@ -486,8 +486,8 @@
 /* Gallery Grid */
 .admin-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.85rem;
   margin-top: 1rem;
 }
 
@@ -498,6 +498,36 @@
   overflow: hidden;
   border: 1px solid var(--adm-surface-border);
   background-color: #fafafa;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-gallery-item:hover {
+  border-color: var(--adm-surface-border-strong);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.admin-gallery-item:active {
+  cursor: grabbing;
+}
+
+.admin-gallery-item.is-dragging {
+  opacity: 0.35;
+  transform: scale(0.96);
+  border: 2px dashed #000000;
+}
+
+.admin-gallery-item.is-drag-over {
+  border: 2px solid #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.admin-gallery-media-wrap {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .admin-gallery-item img,
@@ -505,27 +535,113 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.admin-gallery-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 6px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.admin-gallery-drag-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+}
+
+.admin-gallery-item:hover .admin-gallery-drag-indicator {
+  opacity: 0.9;
 }
 
 .admin-gallery-delete {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 6px;
+  right: 6px;
   width: 22px;
   height: 22px;
   border-radius: 0;
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, 0.75);
   color: #ffffff;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 0.7rem;
+  z-index: 4;
+  transition: background-color 0.15s ease;
 }
 
 .admin-gallery-delete:hover {
   background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.admin-gallery-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.45) 80%, transparent 100%);
+  z-index: 3;
+}
+
+.admin-gallery-ctrl-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  width: 24px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.admin-gallery-ctrl-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.admin-gallery-ctrl-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.admin-gallery-type-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.75);
+  user-select: none;
 }
 
 /* Section Box */

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import "./page.css";
 import { useRevealer } from "@/hooks/useRevealer";
 import Image from "next/image";
@@ -8,18 +9,29 @@ import { HomeSettings } from "@/types/database";
 
 import HeroBioText from "@/components/portfolio/HeroBioText";
 import ProcessGrid from "@/components/portfolio/ProcessGrid";
-import ProjectList from "@/components/portfolio/ProjectList";
-import DirectionsSection from "@/components/portfolio/DirectionsSection";
-import ClientsMarquee from "@/components/portfolio/ClientsMarquee";
+import ProjectList, { ProjectItemData } from "@/components/portfolio/ProjectList";
+import DirectionsSection, { DirectionItemData } from "@/components/portfolio/DirectionsSection";
+import ClientsMarquee, { ClientCardData } from "@/components/portfolio/ClientsMarquee";
 import FooterSection from "@/components/portfolio/FooterSection";
-import Head3DScene from "@/components/portfolio/Head3DScene";
 import CircuitBackground from "@/components/portfolio/CircuitBackground";
+
+const Head3DScene = dynamic(() => import("@/components/portfolio/Head3DScene"), {
+  ssr: false,
+});
 
 interface HomeClientProps {
   initialSettings: HomeSettings | null;
+  initialProjects?: ProjectItemData[];
+  initialDirections?: DirectionItemData[];
+  initialClients?: ClientCardData[];
 }
 
-export default function HomeClient({ initialSettings }: HomeClientProps) {
+export default function HomeClient({
+  initialSettings,
+  initialProjects,
+  initialDirections,
+  initialClients,
+}: HomeClientProps) {
   useRevealer();
 
   const heroLabel = initialSettings?.hero_label || "SALOM /";
@@ -82,6 +94,7 @@ export default function HomeClient({ initialSettings }: HomeClientProps) {
                 images={initialSettings?.process_images}
               />
               <ProjectList
+                initialProjects={initialProjects}
                 buttonTitle={initialSettings?.portfolio_btn_title}
                 buttonCategory={initialSettings?.portfolio_btn_category}
                 buttonYear={initialSettings?.portfolio_btn_year}
@@ -90,6 +103,7 @@ export default function HomeClient({ initialSettings }: HomeClientProps) {
 
             {/* Asosiy Yo‘nalishlar Bo‘limi */}
             <DirectionsSection
+              initialDirections={initialDirections}
               label={initialSettings?.directions_label}
               statementText={initialSettings?.directions_statement}
               marqueeImages={initialSettings?.directions_marquee_images}
@@ -102,7 +116,10 @@ export default function HomeClient({ initialSettings }: HomeClientProps) {
             />
 
             {/* Hamkorlar va Kompaniyalar Bo‘limi */}
-            <ClientsMarquee label={initialSettings?.brands_label} />
+            <ClientsMarquee
+              initialClients={initialClients}
+              label={initialSettings?.brands_label}
+            />
 
             {/* Footer Bo‘limi */}
             <FooterSection

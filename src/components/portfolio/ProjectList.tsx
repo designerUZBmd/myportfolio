@@ -88,6 +88,8 @@ export default function ProjectList({
   const [activeMobileId, setActiveMobileId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialProjects && initialProjects.length > 0) return;
+
     async function loadRealProjects() {
       try {
         const { data, error } = await supabase

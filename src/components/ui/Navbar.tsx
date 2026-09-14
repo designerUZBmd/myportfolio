@@ -15,13 +15,29 @@ export default function Navbar() {
   const { handleNavigation } = useNavigation();
 
   useEffect(() => {
-    async function checkSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    // Fast path: for 99.9% of public visitors without an admin session, skip Supabase Auth network call
+    const hasAuthEvidence =
+      typeof document !== "undefined" &&
+      (document.cookie.includes("sb-") ||
+        Object.keys(localStorage || {}).some((k) => k.startsWith("sb-")));
 
-      setIsLoggedIn(!!session);
+    if (!hasAuthEvidence) {
       setLoading(false);
+      return;
+    }
+
+    async function checkSession() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        setIsLoggedIn(!!session);
+      } catch {
+        setIsLoggedIn(false);
+      } finally {
+        setLoading(false);
+      }
     }
 
     checkSession();

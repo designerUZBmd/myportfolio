@@ -51,10 +51,10 @@ const getCachedGallerySectionsWithItems = unstable_cache(
     }
   },
   ["gallery_sections_with_items_cache"],
-  { revalidate: 60, tags: ["gallery"] }
+  { revalidate: 3600, tags: ["gallery"] }
 );
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function GalleryPage() {
   const sectionsWithItems = await getCachedGallerySectionsWithItems();

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import GalleryManager, { GalleryItem } from "@/components/admin/GalleryManager";
 
 type Category = {
   id: string;
@@ -14,11 +15,6 @@ type Category = {
 type CaseSection = {
   title: string;
   content: string;
-};
-
-type GalleryItem = {
-  type: "image" | "video";
-  url: string;
 };
 
 export default function CreatePortfolioPage() {
@@ -155,28 +151,48 @@ export default function CreatePortfolioPage() {
 
     setLoading(true);
 
-    const { error } = await supabase.from("portfolio_cases").insert({
-      title: title.trim(),
-      slug: slug.trim(),
-      category_id: categoryId,
-      cover_type: "image",
-      cover_url: coverUrl.trim(),
-      excerpt: excerpt.trim(),
-      description: description.trim(),
-      year: Number(year),
-      gallery,
-      sections: sections.filter((s) => s.title.trim() || s.content.trim()),
-      is_featured: isFeatured,
-      is_published: isPublished,
-    });
+    try {
+      const selectedCat = categories.find((c) => c.id === categoryId);
+      const livePath = `/portfolio/${selectedCat?.slug || "general"}/${slug.trim()}`;
 
-    setLoading(false);
+      const res = await fetch("/api/admin/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          livePath,
+          title: title.trim(),
+          slug: slug.trim(),
+          category_id: categoryId,
+          cover_type: "image",
+          cover_url: coverUrl.trim(),
+          excerpt: excerpt.trim(),
+          description: description.trim(),
+          year: Number(year),
+          gallery,
+          sections: sections.filter((s) => s.title.trim() || s.content.trim()),
+          is_featured: isFeatured,
+          is_published: isPublished,
+        }),
+      });
 
-    if (error) {
-      console.error("Insert case error:", error);
-      alert("Saqlashda xatolik yuz berdi: " + error.message);
-    } else {
+      const result = await res.json();
+
+      if (!result.success) {
+        alert("Xatolik: " + (result.error || "Saqlab bo‘lmadi"));
+        if (result.requireLogin) {
+          window.location.href = "/admin/login";
+        }
+        return;
+      }
+
+      alert("✓ Yangi loyiha muvaffaqiyatli yaratildi!");
       router.push("/admin/portfolio");
+    } catch (err: unknown) {
+      console.error("Create error:", err);
+      const msg = err instanceof Error ? err.message : "Noma'lum xatolik";
+      alert("Kutilmagan xatolik yuz berdi: " + msg);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -390,9 +406,10 @@ export default function CreatePortfolioPage() {
                   placeholder="Bo‘lim sarlavhasi"
                   value={section.title}
                   onChange={(e) => {
-                    const copy = [...sections];
-                    copy[idx].title = e.target.value;
-                    setSections(copy);
+                    const val = e.target.value;
+                    setSections((prev) =>
+                      prev.map((s, i) => (i === idx ? { ...s, title: val } : s))
+                    );
                   }}
                   className="admin-input"
                   style={{ marginBottom: "0.5rem" }}
@@ -402,9 +419,10 @@ export default function CreatePortfolioPage() {
                   placeholder="Bo‘lim matni..."
                   value={section.content}
                   onChange={(e) => {
-                    const copy = [...sections];
-                    copy[idx].content = e.target.value;
-                    setSections(copy);
+                    const val = e.target.value;
+                    setSections((prev) =>
+                      prev.map((s, i) => (i === idx ? { ...s, content: val } : s))
+                    );
                   }}
                   className="admin-textarea"
                   rows={3}
@@ -415,49 +433,12 @@ export default function CreatePortfolioPage() {
         </div>
 
         {/* 4. Galereya */}
-        <div className="admin-card" style={{ marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h2 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0, color: "var(--adm-text-primary)" }}>
-              4. Keys Galereyasi ({gallery.length} ta fayl)
-            </h2>
-          </div>
-
-          <label className="admin-dropzone" style={{ display: "block" }}>
-            <div style={{ fontWeight: 600, color: "var(--adm-text-primary)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              {uploadingGallery ? "Yuklanmoqda..." : "Rasm yoki video tanlang"}
-            </div>
-            <input
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              onChange={handleGalleryUpload}
-              disabled={uploadingGallery}
-              style={{ display: "none" }}
-            />
-          </label>
-
-          {gallery.length > 0 && (
-            <div className="admin-gallery-grid">
-              {gallery.map((item, i) => (
-                <div key={i} className="admin-gallery-item">
-                  {item.type === "image" ? (
-                    <img src={item.url} alt={`Gallery item ${i + 1}`} />
-                  ) : (
-                    <video src={item.url} controls />
-                  )}
-                  <button
-                    type="button"
-                    className="admin-gallery-delete"
-                    onClick={() => setGallery(gallery.filter((_, idx) => idx !== i))}
-                    title="O‘chirish"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <GalleryManager
+          items={gallery}
+          onChange={setGallery}
+          uploading={uploadingGallery}
+          onUpload={handleGalleryUpload}
+        />
 
         {/* 5. Sozlamalar */}
         <div className="admin-card" style={{ marginBottom: "2rem" }}>
