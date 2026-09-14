@@ -139,6 +139,16 @@ export default function ProjectList({
     loadRealProjects();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    projectsList.forEach((p) => {
+      if (p.image) {
+        const img = new window.Image();
+        img.src = p.image;
+      }
+    });
+  }, [projectsList]);
+
   const [mobileTilt, setMobileTilt] = useState({ x: 0, z: 0 });
   const sectionRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);

@@ -54,6 +54,10 @@ export default function ProjectPreviewWebGL({
   projects,
 }: ProjectPreviewWebGLProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const projectsRef = useRef(projects);
+  projectsRef.current = projects;
+  const projectsKey = projects.map((p) => `${p.id}:${p.image}`).join("|");
+
   const sceneRef = useRef<{
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
@@ -149,17 +153,26 @@ export default function ProjectPreviewWebGL({
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    // Preload project textures
-    projects.forEach((proj) => {
+    // Warm up shader compilation and GPU pipeline immediately in background
+    try {
+      renderer.compile(scene, camera);
+      renderer.render(scene, camera);
+    } catch {}
+
+    // Preload project textures and immediately upload into GPU VRAM
+    projectsRef.current.forEach((proj) => {
       if (proj.image) {
         textureLoader.load(
           proj.image,
           (tex) => {
             tex.colorSpace = THREE.NoColorSpace;
-            tex.generateMipmaps = true;
+            tex.generateMipmaps = false;
             tex.minFilter = THREE.LinearFilter;
             tex.magFilter = THREE.LinearFilter;
             textures[proj.id] = tex;
+            try {
+              renderer.initTexture(tex);
+            } catch {}
             if (activeProjectRef.current?.id === proj.id && material) {
               material.uniforms.uTexture.value = tex;
             }
@@ -344,7 +357,7 @@ export default function ProjectPreviewWebGL({
       material.dispose();
       renderer.dispose();
     };
-  }, [projects]);
+  }, [projectsKey]);
 
   // Handle active project change
   useEffect(() => {
@@ -364,10 +377,13 @@ export default function ProjectPreviewWebGL({
         loader.setCrossOrigin("anonymous");
         loader.load(activeProject.image, (tex) => {
           tex.colorSpace = THREE.NoColorSpace;
-          tex.generateMipmaps = true;
+          tex.generateMipmaps = false;
           tex.minFilter = THREE.LinearFilter;
           tex.magFilter = THREE.LinearFilter;
           state.textures[activeProject.id] = tex;
+          try {
+            state.renderer.initTexture(tex);
+          } catch {}
           if (activeProjectRef.current?.id === activeProject.id) {
             state.material.uniforms.uTexture.value = tex;
           }

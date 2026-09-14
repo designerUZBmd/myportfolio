@@ -91,6 +91,10 @@ export default function DirectionPreviewWebGL({
   directions,
 }: DirectionPreviewWebGLProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const directionsRef = useRef(directions);
+  directionsRef.current = directions;
+  const directionsKey = directions.map((d) => `${d.id}:${d.image}`).join("|");
+
   const sceneRef = useRef<{
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
@@ -254,16 +258,28 @@ export default function DirectionPreviewWebGL({
       depthTest: false,
     });
 
-    directions.forEach((dir) => {
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Warm up shader compilation and GPU pipeline immediately in background
+    try {
+      renderer.compile(scene, camera);
+      renderer.render(scene, camera);
+    } catch {}
+
+    directionsRef.current.forEach((dir) => {
       if (dir.image) {
         textureLoader.load(
           dir.image,
           (tex) => {
             tex.colorSpace = THREE.NoColorSpace;
-            tex.generateMipmaps = true;
+            tex.generateMipmaps = false;
             tex.minFilter = THREE.LinearFilter;
             tex.magFilter = THREE.LinearFilter;
             textures[dir.id] = tex;
+            try {
+              renderer.initTexture(tex);
+            } catch {}
 
             const img = tex.image as HTMLImageElement;
             const w = img ? img.naturalWidth || img.width || 1600 : 1600;
@@ -282,9 +298,6 @@ export default function DirectionPreviewWebGL({
         );
       }
     });
-
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
 
     const mouse = {
       x: width / 2,
@@ -429,7 +442,7 @@ export default function DirectionPreviewWebGL({
       renderer.dispose();
       Object.values(textures).forEach((t) => t.dispose());
     };
-  }, [directions]);
+  }, [directionsKey]);
 
   return <div ref={containerRef} className="directions-webgl-container" />;
 }

@@ -120,6 +120,16 @@ export default function DirectionsSection({
     loadDirections();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    directions.forEach((d) => {
+      if (d.image) {
+        const img = new window.Image();
+        img.src = d.image;
+      }
+    });
+  }, [directions]);
+
   const marqueeTrackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
