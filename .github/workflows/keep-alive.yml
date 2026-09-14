@@ -1,0 +1,31 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Har 3 kunda bir marta soat 07:00 da (UTC) avtomatik ishga tushadi
+    - cron: '0 7 */3 * *'
+  workflow_dispatch: # GitHub Actions panelidan qo'lda ham sinab ko'rish imkoniyati
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send keep-alive query to Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://bwuelpuepfmptrekvejc.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_n8q3OKWP70nFdqlWOBA4qw_jPor4INL' }}
+        run: |
+          echo "Sending keep-alive ping to Supabase..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            "$SUPABASE_URL/rest/v1/categories?limit=1")
+          
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "SUCCESS: Supabase is active and awake!"
+          else
+            echo "WARNING: Unexpected HTTP status $STATUS"
+            exit 1
+          fi
