@@ -5,6 +5,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { AboutSection, AboutCareer, AboutFloatingCard } from "@/types/database";
 import { parseAboutText, RenderAboutTokens } from "@/lib/aboutParser";
+import { triggerRevalidate } from "@/lib/revalidate";
 import "@/app/(public)/about/about.css";
 
 const DEFAULT_SECTIONS: AboutSection[] = [
@@ -176,6 +177,7 @@ export default function AdminAboutPage() {
       });
 
       if (error) throw error;
+      await triggerRevalidate({ tag: "about", path: "/about" });
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);

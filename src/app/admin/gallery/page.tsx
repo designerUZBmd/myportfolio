@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import CloudinaryMediaModal, {
   SelectedMediaItem,
 } from "@/components/admin/CloudinaryMediaModal";
+import { triggerRevalidate } from "@/lib/revalidate";
 
 type Section = {
   id: string;
@@ -68,6 +69,7 @@ export default function AdminGalleryPage() {
     if (!error) {
       setNewTitle("");
       fetchSections();
+      await triggerRevalidate({ path: "/gallery", tag: "gallery" });
     } else {
       alert("Bo‘lim qo‘shishda xatolik: " + error.message);
     }
@@ -82,6 +84,7 @@ export default function AdminGalleryPage() {
 
     if (!error) {
       setSections((prev) => prev.filter((s) => s.id !== id));
+      await triggerRevalidate({ path: "/gallery", tag: "gallery" });
     } else {
       alert("O‘chirishda xatolik: " + error.message);
     }
@@ -172,6 +175,7 @@ function GallerySectionBlock({
       });
     }
     fetchItems();
+    await triggerRevalidate({ path: "/gallery", tag: "gallery" });
   }
 
   async function fetchItems() {
@@ -228,6 +232,7 @@ function GallerySectionBlock({
         }
       }
       fetchItems();
+      await triggerRevalidate({ path: "/gallery", tag: "gallery" });
     } catch (err) {
       console.error("Gallery media upload error:", err);
       alert("Media yuklashda xatolik yuz berdi");
@@ -247,6 +252,7 @@ function GallerySectionBlock({
 
     if (!error) {
       setItems((prev) => prev.filter((item) => item.id !== id));
+      await triggerRevalidate({ path: "/gallery", tag: "gallery" });
     }
   }
 

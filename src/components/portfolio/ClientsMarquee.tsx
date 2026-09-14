@@ -314,6 +314,8 @@ export default function ClientsMarquee({
         className="clients-marquee"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseEnter}
+        onTouchEnd={handleMouseLeave}
       >
         <div ref={trackRef} className="clients-marquee__track">
           {/* First Sequence */}
@@ -321,7 +323,11 @@ export default function ClientsMarquee({
             <div
               key={`c1-${client.id}-${idx}`}
               className="client-card"
-              style={{ height: `${client.height}px` }}
+              style={
+                {
+                  "--card-height": `${client.height || 240}px`,
+                } as React.CSSProperties
+              }
             >
               <div className="client-card__logo-wrap">
                 {renderClientLogo(client)}
@@ -334,7 +340,11 @@ export default function ClientsMarquee({
             <div
               key={`c2-${client.id}-${idx}`}
               className="client-card"
-              style={{ height: `${client.height}px` }}
+              style={
+                {
+                  "--card-height": `${client.height || 240}px`,
+                } as React.CSSProperties
+              }
             >
               <div className="client-card__logo-wrap">
                 {renderClientLogo(client)}

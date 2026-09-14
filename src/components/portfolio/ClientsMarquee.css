@@ -29,12 +29,13 @@
 /* Crisp architectural cards hanging downwards from top baseline with pure logos */
 .client-card {
   position: relative;
-  width: clamp(170px, 15vw, 230px);
+  width: clamp(180px, 15vw, 240px);
+  height: var(--card-height, 240px);
   flex-shrink: 0;
   background-color: #f0f0f0;
   border: none;
   border-radius: 0;
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -48,13 +49,15 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  padding: 0.5rem 0.5rem;
+  box-sizing: border-box;
 }
 
 .client-logo-svg {
   width: 100%;
-  max-width: 140px;
+  max-width: 150px;
   height: auto;
-  max-height: 48px;
+  max-height: 56px;
   color: #13110e;
   opacity: 0.82;
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -64,23 +67,6 @@
 .client-card:hover .client-logo-svg {
   opacity: 1;
   transform: scale(1.04);
-}
-
-@media (max-width: 768px) {
-  .clients-section {
-    padding-top: 1.5rem;
-    padding-bottom: 3.5rem;
-  }
-
-  .client-card {
-    width: 135px;
-    padding: 1.1rem 0.85rem;
-  }
-
-  .client-logo-svg {
-    max-width: 105px;
-    max-height: 36px;
-  }
 }
 
 .clients-header {
@@ -97,9 +83,9 @@
 }
 
 .client-logo-img {
-  max-width: 140px;
-  max-height: 48px;
-  width: auto;
+  width: 100%;
+  max-width: 170px;
+  max-height: 84px;
   height: auto;
   object-fit: contain;
   filter: grayscale(100%);
@@ -127,6 +113,83 @@
 .client-card:hover .client-logo-text {
   opacity: 1;
   transform: scale(1.04);
+}
+
+@media (max-width: 992px) {
+  .client-card {
+    width: clamp(155px, 18vw, 195px);
+    height: clamp(130px, calc(var(--card-height, 240px) * 0.72), 235px);
+  }
+
+  .client-logo-img {
+    max-width: 145px;
+    max-height: 72px;
+  }
+}
+
+@media (max-width: 768px) {
+  .clients-section {
+    padding-top: 1.5rem;
+    padding-bottom: 3.5rem;
+  }
+
+  .clients-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .clients-marquee {
+    padding: 0;
+  }
+
+  .clients-marquee__track {
+    gap: 12px;
+  }
+
+  .client-card {
+    width: clamp(130px, 36vw, 160px);
+    height: clamp(110px, calc(var(--card-height, 240px) * 0.56), 185px);
+    padding: 0.85rem 0.65rem;
+  }
+
+  .client-card__logo-wrap {
+    padding: 0.25rem 0.35rem;
+  }
+
+  .client-logo-svg {
+    max-width: 115px;
+    max-height: 40px;
+  }
+
+  .client-logo-img {
+    max-width: 125px;
+    max-height: 58px;
+  }
+
+  .client-logo-text {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .client-card {
+    width: clamp(115px, 39vw, 140px);
+    height: clamp(100px, calc(var(--card-height, 240px) * 0.50), 160px);
+    padding: 0.75rem 0.5rem;
+  }
+
+  .client-logo-svg {
+    max-width: 98px;
+    max-height: 34px;
+  }
+
+  .client-logo-img {
+    max-width: 110px;
+    max-height: 50px;
+  }
+
+  .client-logo-text {
+    font-size: 0.8rem;
+  }
 }
 
 

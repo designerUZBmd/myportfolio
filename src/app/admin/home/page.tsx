@@ -7,6 +7,7 @@ import { HomeSettings, Direction, Brand } from "@/types/database";
 import CloudinaryMediaModal, {
   SelectedMediaItem,
 } from "@/components/admin/CloudinaryMediaModal";
+import { triggerRevalidate } from "@/lib/revalidate";
 
 type TabType = "hero" | "directions" | "brands" | "footer";
 
@@ -208,6 +209,7 @@ export default function AdminHomePage() {
         .upsert(payload, { onConflict: "id" });
 
       if (error) throw error;
+      await triggerRevalidate({ tag: "home", path: "/" });
       alert("Bosh sahifa sozlamalari muvaffaqiyatli saqlandi!");
     } catch (err: any) {
       console.error("Save error:", err);
@@ -281,6 +283,7 @@ export default function AdminHomePage() {
       resetDirectionForm();
       const { data } = await supabase.from("directions").select("*").order("order");
       if (data) setDirectionsList(data);
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err: any) {
       alert("Xatolik: " + err.message);
     } finally {
@@ -295,6 +298,7 @@ export default function AdminHomePage() {
       if (error) throw error;
       setDirectionsList((prev) => prev.filter((d) => d.id !== id));
       if (editingDirectionId === id) resetDirectionForm();
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err: any) {
       alert("Xatolik: " + err.message);
     }
@@ -311,6 +315,7 @@ export default function AdminHomePage() {
       setDirectionsList((prev) =>
         prev.map((d) => (d.id === item.id ? { ...d, is_active: updated } : d))
       );
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err) {
       alert("Holatni o‘zgartirishda xatolik");
     }
@@ -376,6 +381,7 @@ export default function AdminHomePage() {
       resetBrandForm();
       const { data } = await supabase.from("brands").select("*").order("order");
       if (data) setBrandsList(data);
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err: any) {
       alert("Xatolik: " + err.message);
     } finally {
@@ -390,6 +396,7 @@ export default function AdminHomePage() {
       if (error) throw error;
       setBrandsList((prev) => prev.filter((b) => b.id !== id));
       if (editingBrandId === id) resetBrandForm();
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err: any) {
       alert("Xatolik: " + err.message);
     }
@@ -406,6 +413,7 @@ export default function AdminHomePage() {
       setBrandsList((prev) =>
         prev.map((b) => (b.id === item.id ? { ...b, is_active: updated } : b))
       );
+      await triggerRevalidate({ tag: "home", path: "/" });
     } catch (err) {
       alert("Holatni o‘zgartirishda xatolik");
     }
