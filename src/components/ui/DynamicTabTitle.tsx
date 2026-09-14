@@ -7,7 +7,7 @@ export default function DynamicTabTitle() {
   const currentIndexRef = useRef(0);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     let isCancelled = false;
 
     async function initTitleRotation() {
@@ -68,23 +68,71 @@ export default function DynamicTabTitle() {
       }
 
       // Set initial word
-      currentIndexRef.current = 0;
-      document.title = words[0];
+      let currentWordIdx = 0;
+      let currentText = words[0];
+      document.title = currentText;
 
-      const intervalMs = Math.max(1000, intervalSec * 1000);
+      const holdDuration = Math.max(1200, intervalSec * 1000);
+      const eraseSpeed = 35; // ms per char when deleting
+      const typeSpeed = 55;  // ms per char when typing
 
-      timer = setInterval(() => {
+      function cycleToNextWord() {
         if (isCancelled) return;
-        currentIndexRef.current = (currentIndexRef.current + 1) % words.length;
-        document.title = words[currentIndexRef.current];
-      }, intervalMs);
+
+        const nextIdx = (currentWordIdx + 1) % words.length;
+        const targetWord = words[nextIdx];
+
+        // If tab is in background, update immediately to prevent browser throttle lags
+        if (typeof document !== "undefined" && document.hidden) {
+          currentWordIdx = nextIdx;
+          currentText = targetWord;
+          document.title = targetWord;
+          timer = setTimeout(cycleToNextWord, holdDuration);
+          return;
+        }
+
+        // Step 1: Smoothly erase previous word down to 1 letter (never empty, so browser never shows URL)
+        function erase() {
+          if (isCancelled) return;
+          if (currentText.length > 1) {
+            currentText = currentText.slice(0, -1);
+            document.title = currentText;
+            timer = setTimeout(erase, eraseSpeed);
+          } else {
+            // 1 letter left, brief pause, then start typing next word from its 1st letter
+            timer = setTimeout(() => {
+              typeNext(1);
+            }, 80);
+          }
+        }
+
+        // Step 2: Smoothly type next word letter-by-letter starting from 1st char
+        function typeNext(charCount: number) {
+          if (isCancelled) return;
+          if (charCount <= targetWord.length) {
+            currentText = targetWord.slice(0, charCount);
+            document.title = currentText;
+            timer = setTimeout(() => typeNext(charCount + 1), typeSpeed);
+          } else {
+            // Fully typed, hold for user-configured duration
+            currentWordIdx = nextIdx;
+            currentText = targetWord;
+            document.title = targetWord;
+            timer = setTimeout(cycleToNextWord, holdDuration);
+          }
+        }
+
+        erase();
+      }
+
+      timer = setTimeout(cycleToNextWord, holdDuration);
     }
 
     initTitleRotation();
 
     return () => {
       isCancelled = true;
-      if (timer) clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
