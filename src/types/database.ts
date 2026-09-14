@@ -93,6 +93,7 @@ export interface HomeSettings {
   brands_label?: string;
   footer_label: string;
   footer_statement: string;
+  favicon_url?: string;
   updated_at?: string;
 }
 

@@ -102,6 +102,11 @@ export default function AdminLayout({
       href: "/admin/gallery",
       exact: false,
     },
+    {
+      title: "Cloudinary",
+      href: "/admin/cloudinary",
+      exact: false,
+    },
   ];
 
   return (

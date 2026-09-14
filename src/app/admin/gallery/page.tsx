@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import CloudinaryMediaModal, {
+  SelectedMediaItem,
+} from "@/components/admin/CloudinaryMediaModal";
 
 type Section = {
   id: string;
@@ -158,6 +161,18 @@ function GallerySectionBlock({
 }) {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  async function handleCloudinarySelect(selected: SelectedMediaItem[]) {
+    for (const item of selected) {
+      await supabase.from("gallery_items").insert({
+        section_id: section.id,
+        type: item.type,
+        url: item.url,
+      });
+    }
+    fetchItems();
+  }
 
   async function fetchItems() {
     const { data } = await supabase
@@ -255,20 +270,71 @@ function GallerySectionBlock({
         </button>
       </div>
 
-      {/* Upload Dropzone */}
-      <label className="admin-dropzone" style={{ display: "block", marginBottom: "1.25rem" }}>
-        <div style={{ fontWeight: 600, color: "var(--adm-text-primary)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          {uploading ? "Yuklanmoqda..." : "Rasm yoki video yuklang"}
-        </div>
-        <input
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          onChange={handleMediaUpload}
-          disabled={uploading}
-          style={{ display: "none" }}
-        />
-      </label>
+      {/* Upload and Library Buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="admin-btn admin-btn--primary"
+          style={{
+            padding: "0.85rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.25rem",
+            textAlign: "center",
+          }}
+        >
+          <span style={{ fontSize: "1rem" }}>🖼</span>
+          <strong style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Cloudinary Kutubxonasidan Tanlash
+          </strong>
+        </button>
+
+        <label
+          className="admin-dropzone"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: uploading ? "wait" : "pointer",
+            margin: 0,
+            padding: "0.85rem",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 700,
+              color: "var(--adm-text-primary)",
+              fontSize: "0.78rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {uploading ? "⏳ Yuklanmoqda..." : "⬆ Kompyuterdan Yuklash"}
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={handleMediaUpload}
+            disabled={uploading}
+            style={{ display: "none" }}
+          />
+        </label>
+      </div>
+
+      <CloudinaryMediaModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSelect={handleCloudinarySelect}
+        multiple={true}
+        mediaType="all"
+        title={`"${section.title}" uchun media tanlash`}
+      />
 
       {/* Grid */}
       {items.length > 0 ? (

@@ -1,6 +1,8 @@
 "use client";
-
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import CloudinaryMediaModal, {
+  SelectedMediaItem,
+} from "@/components/admin/CloudinaryMediaModal";
 
 export type GalleryItem = {
   type: "image" | "video";
@@ -21,6 +23,15 @@ export default function GalleryManager({
   onUpload,
 }: GalleryManagerProps) {
   const draggedIndexRef = useRef<number | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleCloudinarySelect = (selected: SelectedMediaItem[]) => {
+    const newItems: GalleryItem[] = selected.map((s) => ({
+      type: s.type,
+      url: s.url,
+    }));
+    onChange([...items, ...newItems]);
+  };
 
   // Drag and drop handlers using Ref to avoid Chrome cancel-on-rerender bug
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -194,31 +205,78 @@ export default function GalleryManager({
         </span>
       </div>
 
-      {/* Upload Dropzone */}
-      <label className="admin-dropzone" style={{ display: "block", cursor: uploading ? "wait" : "pointer" }}>
-        <div
+      {/* Upload and Library Buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="admin-btn admin-btn--primary"
           style={{
-            fontWeight: 600,
-            color: "var(--adm-text-primary)",
-            fontSize: "0.85rem",
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
+            padding: "1rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.35rem",
+            textAlign: "center",
+            height: "100%",
           }}
         >
-          {uploading ? "Yuklanmoqda..." : "+ Rasm yoki video tanlang (Ko‘p tanlash mumkin)"}
-        </div>
-        <div style={{ fontSize: "0.72rem", color: "var(--adm-text-secondary)", marginTop: "0.25rem" }}>
-          JPG, PNG, WEBP, MP4 formatlar qo‘llab-quvvatlanadi
-        </div>
-        <input
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          onChange={onUpload}
-          disabled={uploading}
-          style={{ display: "none" }}
-        />
-      </label>
+          <span style={{ fontSize: "1.1rem" }}>🖼</span>
+          <strong style={{ fontSize: "0.82rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Cloudinary Kutubxonasidan Tanlash
+          </strong>
+          <span style={{ fontSize: "0.68rem", opacity: 0.85, fontWeight: 400 }}>
+            Mavjud rasmlardan tanlang yoki yangi yuklang
+          </span>
+        </button>
+
+        <label
+          className="admin-dropzone"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: uploading ? "wait" : "pointer",
+            margin: 0,
+            padding: "1rem",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 700,
+              color: "var(--adm-text-primary)",
+              fontSize: "0.82rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {uploading ? "⏳ Yuklanmoqda..." : "⬆ Kompyuterdan To‘g‘ridan-to‘g‘ri Yuklash"}
+          </div>
+          <div style={{ fontSize: "0.68rem", color: "var(--adm-text-secondary)", marginTop: "0.25rem" }}>
+            JPG, PNG, WEBP, MP4 (Ko‘p tanlash mumkin)
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={onUpload}
+            disabled={uploading}
+            style={{ display: "none" }}
+          />
+        </label>
+      </div>
+
+      <CloudinaryMediaModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSelect={handleCloudinarySelect}
+        multiple={true}
+        mediaType="all"
+        title="Galereya uchun Media Tanlash"
+      />
 
       {/* Gallery Reorderable Grid */}
       {items.length > 0 && (

@@ -215,6 +215,25 @@
   padding: 0 !important;
 }
 
+.case-right__cover video,
+.case-gallery-item video {
+  pointer-events: none;
+  user-select: none;
+  outline: none;
+}
+
+.case-right__cover video::-webkit-media-controls,
+.case-gallery-item video::-webkit-media-controls {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.case-right__cover video::-webkit-media-controls-enclosure,
+.case-gallery-item video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
 /* =========================================================================
    3. FULL-WIDTH SOLID BLACK FOOTER BAR
    ========================================================================= */

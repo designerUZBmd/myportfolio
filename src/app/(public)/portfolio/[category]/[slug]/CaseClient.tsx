@@ -41,6 +41,77 @@ type NextCaseItem = {
     | null;
 } | null;
 
+function CaseVideo({
+  src,
+  className,
+  style,
+}: {
+  src: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
+
+    // Initial attempt
+    const initialPlay = video.play();
+    if (initialPlay !== undefined) {
+      initialPlay.catch(() => {});
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const p = video.play();
+            if (p !== undefined) p.catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "80px 0px 80px 0px",
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [src]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      disablePictureInPicture
+      disableRemotePlayback
+      className={className}
+      style={{
+        display: "block",
+        width: "100%",
+        ...style,
+      }}
+    />
+  );
+}
+
 export default function CaseClient({
   item,
   nextCase,
@@ -109,12 +180,9 @@ export default function CaseClient({
             {/* Main Cover (Uncropped, crisp, 0px border-radius) */}
             <div ref={heroMediaRef} className="case-right__cover">
               {item.cover_type === "video" ? (
-                <video
+                <CaseVideo
                   src={item.cover_url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
                 <Image
@@ -151,7 +219,7 @@ export default function CaseClient({
                     {item.gallery.map((media: GalleryMedia, i: number) => (
                       <div key={i} className="case-gallery-item">
                         {media.type === "video" ? (
-                          <video src={media.url} controls width="100%" />
+                          <CaseVideo src={media.url} />
                         ) : (
                           <Image
                             src={media.url}

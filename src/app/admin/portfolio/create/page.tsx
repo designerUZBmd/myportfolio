@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import GalleryManager, { GalleryItem } from "@/components/admin/GalleryManager";
+import MediaInputWithPicker from "@/components/admin/MediaInputWithPicker";
 
 type Category = {
   id: string;
@@ -308,65 +309,13 @@ export default function CreatePortfolioPage() {
             2. Asosiy Muqova Rasmi
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: coverUrl ? "200px 1fr" : "1fr", gap: "1.25rem", alignItems: "start" }}>
-            {coverUrl && (
-              <div style={{ position: "relative", border: "1px solid var(--adm-surface-border)" }}>
-                <img
-                  src={coverUrl}
-                  alt="Cover preview"
-                  style={{ width: "100%", aspectRatio: "16/10", objectFit: "cover", display: "block" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setCoverUrl("")}
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    background: "#000",
-                    color: "white",
-                    border: "none",
-                    width: 22,
-                    height: 22,
-                    cursor: "pointer",
-                    fontSize: "0.75rem",
-                  }}
-                  title="O‘chirish"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-
-            <div>
-              <label className="admin-dropzone" style={{ display: "block", marginBottom: "1rem" }}>
-                <div style={{ fontWeight: 600, color: "var(--adm-text-primary)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  {uploadingCover ? "Yuklanmoqda..." : "Faylni tanlang (Cloudinary)"}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleCoverUpload}
-                  disabled={uploadingCover}
-                  style={{ display: "none" }}
-                />
-              </label>
-
-              <div className="admin-form-group">
-                <label className="admin-form-label" style={{ fontSize: "0.72rem" }}>
-                  Yoki rasm URL manzili:
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={coverUrl}
-                  onChange={(e) => setCoverUrl(e.target.value)}
-                  className="admin-input"
-                  style={{ fontSize: "0.85rem" }}
-                />
-              </div>
-            </div>
-          </div>
+          <MediaInputWithPicker
+            value={coverUrl}
+            onChange={setCoverUrl}
+            mediaType="image"
+            placeholder="https://res.cloudinary.com/..."
+            helperText="Cloudinary kutubxonasidan mavjud rasmni tanlang yoki kompyuterdan yangisini yuklang"
+          />
         </div>
 
         {/* 3. Keys Bo'limlari (Case Sections) */}

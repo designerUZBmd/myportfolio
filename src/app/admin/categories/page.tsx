@@ -96,6 +96,21 @@ export default function AdminCategoriesPage() {
   }
 
   async function deleteCategory(id: string, catTitle: string) {
+    // 1. Check if any cases are attached to this category
+    const { count, error: countErr } = await supabase
+      .from("portfolio_cases")
+      .select("id", { count: "exact", head: true })
+      .eq("category_id", id);
+
+    if (count && count > 0) {
+      alert(
+        `"${catTitle}" kategoriyasiga ${count} ta portfolio loyihasi biriktirilgan!\n\n` +
+        `Loyihalarni yo‘qolib ketishidan saqlash uchun ushbu kategoriyani o‘chirib bo‘lmaydi. ` +
+        `Iltimos, avval ushbu loyihalarni boshqa kategoriyaga o‘tkazing yoki o‘chiring.`
+      );
+      return;
+    }
+
     const ok = confirm(`"${catTitle}" kategoriyasini o‘chirishni tasdiqlaysizmi?`);
     if (!ok) return;
 

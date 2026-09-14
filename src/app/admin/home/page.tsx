@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { HomeSettings, Direction, Brand } from "@/types/database";
+import CloudinaryMediaModal, {
+  SelectedMediaItem,
+} from "@/components/admin/CloudinaryMediaModal";
 
 type TabType = "hero" | "directions" | "brands" | "footer";
 
@@ -83,6 +86,15 @@ export default function AdminHomePage() {
   const [brandOrder, setBrandOrder] = useState(1);
   const [brandActive, setBrandActive] = useState(true);
   const [uploadingBrandLogo, setUploadingBrandLogo] = useState(false);
+
+  // Cloudinary Picker Modal state
+  const [cloudinaryModalOpen, setCloudinaryModalOpen] = useState(false);
+  const [cloudinaryTargetCallback, setCloudinaryTargetCallback] = useState<((url: string) => void) | null>(null);
+
+  function openCloudinaryPicker(callback: (url: string) => void) {
+    setCloudinaryTargetCallback(() => callback);
+    setCloudinaryModalOpen(true);
+  }
 
   // Load all initial data
   async function loadAllData() {
@@ -516,22 +528,31 @@ export default function AdminHomePage() {
                         className="admin-input"
                         style={{ marginBottom: "0.5rem" }}
                       />
-                      <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: uploadingHero ? "not-allowed" : "pointer" }}>
-                        {uploadingHero ? "Yuklanmoqda..." : "📁 Yangi Surat Yuklash"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            if (!e.target.files?.[0]) return;
-                            setUploadingHero(true);
-                            const url = await uploadFile(e.target.files[0]);
-                            if (url) setHeroImage(url);
-                            setUploadingHero(false);
-                          }}
-                          disabled={uploadingHero}
-                          style={{ display: "none" }}
-                        />
-                      </label>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => openCloudinaryPicker(setHeroImage)}
+                          className="admin-btn admin-btn--primary admin-btn--sm"
+                        >
+                          🖼 Cloudinary’dan Tanlash
+                        </button>
+                        <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: uploadingHero ? "not-allowed" : "pointer", margin: 0 }}>
+                          {uploadingHero ? "Yuklanmoqda..." : "📁 Kompyuterdan Yuklash"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files?.[0]) return;
+                              setUploadingHero(true);
+                              const url = await uploadFile(e.target.files[0]);
+                              if (url) setHeroImage(url);
+                              setUploadingHero(false);
+                            }}
+                            disabled={uploadingHero}
+                            style={{ display: "none" }}
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
 
@@ -585,8 +606,24 @@ export default function AdminHomePage() {
                         <div style={{ width: "100%", height: "130px", position: "relative", marginBottom: "0.75rem", border: "1px solid #ddd", overflow: "hidden" }}>
                           <Image src={processImages[idx] || "/images/process1.jpg"} alt={`Process ${idx + 1}`} fill style={{ objectFit: "cover" }} />
                         </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openCloudinaryPicker((url) => {
+                              setProcessImages((prev) => {
+                                const next = [...prev];
+                                next[idx] = url;
+                                return next;
+                              });
+                            })
+                          }
+                          className="admin-btn admin-btn--primary admin-btn--sm"
+                          style={{ width: "100%", marginBottom: "0.35rem" }}
+                        >
+                          🖼 Cloudinary
+                        </button>
                         <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ width: "100%", cursor: uploadingProcessIndex === idx ? "not-allowed" : "pointer" }}>
-                          {uploadingProcessIndex === idx ? "Yuklanmoqda..." : "📁 Almashtirish"}
+                          {uploadingProcessIndex === idx ? "Yuklanmoqda..." : "📁 Kompyuterdan"}
                           <input
                             type="file"
                             accept="image/*"
@@ -671,24 +708,37 @@ export default function AdminHomePage() {
                     <span className="admin-form-helper">Yo‘nalishlar tepasida cheksiz aylanib turuvchi suratlar</span>
                   </div>
 
-                  <label className="admin-btn admin-btn--primary admin-btn--sm" style={{ cursor: uploadingMarquee ? "not-allowed" : "pointer" }}>
-                    {uploadingMarquee ? "Yuklanmoqda..." : "+ Yangi Marquee Rasm Yuklash"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        if (!e.target.files?.[0]) return;
-                        setUploadingMarquee(true);
-                        const url = await uploadFile(e.target.files[0]);
-                        if (url) {
-                          setMarqueeImages((prev) => [...prev, url]);
-                        }
-                        setUploadingMarquee(false);
-                      }}
-                      disabled={uploadingMarquee}
-                      style={{ display: "none" }}
-                    />
-                  </label>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openCloudinaryPicker((url) =>
+                          setMarqueeImages((prev) => [...prev, url])
+                        )
+                      }
+                      className="admin-btn admin-btn--primary admin-btn--sm"
+                    >
+                      🖼 Cloudinary’dan Tanlash
+                    </button>
+                    <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: uploadingMarquee ? "not-allowed" : "pointer", margin: 0 }}>
+                      {uploadingMarquee ? "Yuklanmoqda..." : "+ Kompyuterdan Yuklash"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (!e.target.files?.[0]) return;
+                          setUploadingMarquee(true);
+                          const url = await uploadFile(e.target.files[0]);
+                          if (url) {
+                            setMarqueeImages((prev) => [...prev, url]);
+                          }
+                          setUploadingMarquee(false);
+                        }}
+                        disabled={uploadingMarquee}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "1rem" }}>
@@ -918,21 +968,30 @@ export default function AdminHomePage() {
                         className="admin-input"
                         style={{ marginBottom: "0.5rem" }}
                       />
-                      <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: "pointer" }}>
-                        {uploadingDirImage ? "Yuklanmoqda..." : "📁 Kompyuterdan Rasm Yuklash"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            if (!e.target.files?.[0]) return;
-                            setUploadingDirImage(true);
-                            const url = await uploadFile(e.target.files[0]);
-                            if (url) setDirImage(url);
-                            setUploadingDirImage(false);
-                          }}
-                          style={{ display: "none" }}
-                        />
-                      </label>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => openCloudinaryPicker(setDirImage)}
+                          className="admin-btn admin-btn--primary admin-btn--sm"
+                        >
+                          🖼 Cloudinary’dan Tanlash
+                        </button>
+                        <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: "pointer", margin: 0 }}>
+                          {uploadingDirImage ? "Yuklanmoqda..." : "📁 Kompyuterdan Yuklash"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files?.[0]) return;
+                              setUploadingDirImage(true);
+                              const url = await uploadFile(e.target.files[0]);
+                              if (url) setDirImage(url);
+                              setUploadingDirImage(false);
+                            }}
+                            style={{ display: "none" }}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     {dirImage && (
@@ -1117,21 +1176,30 @@ export default function AdminHomePage() {
                         className="admin-input"
                         style={{ marginBottom: "0.5rem" }}
                       />
-                      <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: "pointer" }}>
-                        {uploadingBrandLogo ? "Yuklanmoqda..." : "📁 Kompyuterdan Logotip Yuklash"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            if (!e.target.files?.[0]) return;
-                            setUploadingBrandLogo(true);
-                            const url = await uploadFile(e.target.files[0]);
-                            if (url) setBrandLogo(url);
-                            setUploadingBrandLogo(false);
-                          }}
-                          style={{ display: "none" }}
-                        />
-                      </label>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => openCloudinaryPicker(setBrandLogo)}
+                          className="admin-btn admin-btn--primary admin-btn--sm"
+                        >
+                          🖼 Cloudinary’dan Tanlash
+                        </button>
+                        <label className="admin-btn admin-btn--secondary admin-btn--sm" style={{ cursor: "pointer", margin: 0 }}>
+                          {uploadingBrandLogo ? "Yuklanmoqda..." : "📁 Kompyuterdan Yuklash"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files?.[0]) return;
+                              setUploadingBrandLogo(true);
+                              const url = await uploadFile(e.target.files[0]);
+                              if (url) setBrandLogo(url);
+                              setUploadingBrandLogo(false);
+                            }}
+                            style={{ display: "none" }}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     {brandLogo && (
@@ -1279,6 +1347,20 @@ export default function AdminHomePage() {
           )}
         </div>
       )}
+
+      {/* Cloudinary Media Modal */}
+      <CloudinaryMediaModal
+        isOpen={cloudinaryModalOpen}
+        onClose={() => setCloudinaryModalOpen(false)}
+        onSelect={(items) => {
+          if (items.length > 0 && cloudinaryTargetCallback) {
+            cloudinaryTargetCallback(items[0].url);
+          }
+        }}
+        multiple={false}
+        mediaType="image"
+        title="Bosh Sahifa uchun Rasm Tanlash"
+      />
     </div>
   );
 }
